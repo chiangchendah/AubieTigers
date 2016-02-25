@@ -1,0 +1,68 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<meta name="argon-required-capabilities" content="Vuforia" />
+
+
+<title>AR Map</title>
+
+<script src="./assets/three.js"></script>
+<script src="./assets/threestrap.js"></script>
+<script src="./assets/argon.js"></script>
+<script src="./assets/argon-three.js"></script>
+
+<body style="background-color:rgba(255,255,255,0.7)"> 
+    <div id="argon-immersive-context" >
+    	<div class="argon-always-visible"></div>
+  	</div>
+	<div>  
+		<h2>Image Tracking Auburn Map Using Vuforia</h2> 
+		<p>This is the first step to getting the AR Map image tracking to work.</p>
+	</div> 
+</body>
+
+<script id="license" type="text/plain">
+-----BEGIN PGP MESSAGE-----
+Comment: GPGTools - https://gpgtools.org
+
+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
+bA==
+=rMig
+-----END PGP MESSAGE-----
+</script>
+
+	
+<script src="./app.js"></script>
+
+</html>

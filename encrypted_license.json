@@ -1,0 +1,6 @@
+{
+	"key": "ASkFJJX/////AAAAAT3xWARiB06zpkG0cXnuuE4b0gz+qzFs7NP0xy09i4Wu425g6MS195/uDnoGXv6uCEdTRVjo8tN/+Gl2hVOCYrZN+TtjpSMa0MeALJRjssjQ261vmGTYEpedwCTqe57a59Ar7xV+1BfqNuk38cKM3RUuOVP1L58FgIYoemD73YHPz6QFmT71k0ZbVz+k6978t58L7tgXFcndT1dliM2O2QQJqYCh1lYPG/RODGXHLxyMUDeoMjy7Rrx/+GZEZIM3gZRgKafCmox85QFEjvdIW/G3sfze5skoDShaF26h16NMYijVV4TKCwcimgr7MXoHKVEGo7rmNn+aYSClHHen4SVlGeYBzz7XYiqsMgHp8UKX",
+	"urls": ["^http://www.samlcheng.com/.*",
+			"^http[s]?://[A-Za-z0-9-.]*.samlcheng.com/.*",
+			"^http[s]?://[A-Za-z0-9-.]*.samlcheng.com/armap/.*"]
+}
