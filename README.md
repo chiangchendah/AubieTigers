@@ -1,7 +1,7 @@
 # Aubie Tigers
 AR/VR Map for Auburn Avenue
 
-Team Members: 
+Team Members:
 
 <ul>
 <li>Samuel Cheng</li>
@@ -11,3 +11,29 @@ Team Members:
 </ul>
 
 The AR map is an interactive map that will be given to Auburn Avenue visitors. It functions as an ordinary map but when viewed via the Argon browser, it reveals an AR version of the Atlanta Streetcar as it travels its route. As it travels around the points, the user will be able to tap on various pop-up information displays and learn about the history of sites at that location.
+
+## Development
+
+### Installing Dependencies
+
+From within the root directory:
+
+```sh
+npm install
+jspm init
+```
+### Running locally
+
+start server:
+
+```sh
+gulp dev
+```
+lookup IP address:
+
+```sh
+ifconfig
+```
+visit:
+
+> ipaddress:1337/index.html
