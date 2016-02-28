@@ -24,16 +24,23 @@ jspm init
 ```
 ### Running locally
 
-start server:
+Start server:
 
 ```sh
 gulp dev
 ```
-lookup IP address:
+Look up IP address:
 
 ```sh
 ifconfig
 ```
-visit:
+Visit:
 
-> ipaddress:1337/index.html
+> your-ip-address:1337/index.html
+
+### Debugging Argon3
+
+Enter URL:
+
+> your-ip-address:1337/debug
+
