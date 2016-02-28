@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<QCARConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="qcar_config.xsd">
-  <Tracking>
-    <ImageTarget name="stones" size="100.000000 70.000000" />
-    <ImageTarget name="chips" size="100.000000 70.000000" />
-    <ImageTarget name="streetcar" size="500.000000 386.363647" />
-    <ImageTarget name="Map_Fairfax" size="500.000000 372.500000" />
-  </Tracking>
-</QCARConfig>
