@@ -1,19 +1,24 @@
-<!doctype html>
-<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset='utf-8'>
-    <title>My Argon App</title>
-    <script src="./src/vendor/three.js"></script>
-    <script src="./src/vendor/threestrap.js"></script>
-    <script src="./src/vendor/argon.js"></script>
-    <script src="./src/vendor/argon-three.js"></script>
-  </head>
-  <body>
-    <script src="jspm_packages/system.js"></script>
-    <script src='config.js'></script>
-    <script>
-        System.import('src/app')
-    </script>
+<head>
+  <title>OSM Buildings</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+  
+  </style>
+  <script src="./src/vendor/three.js"></script>
+   <script src="./src/vendor/threestrap.js"></script>
+   <script src="./src/vendor/argon.js"></script>
+   <script src="./src/vendor/argon-three.js"></script>
+   <script src="./src/OBJLoader.js"></script>
+ <!--  <link rel="stylesheet" href="OSMBuildings/dist/OSMBuildings/OSMBuildings.css">
+  <script src="OSMBuildings/dist/OSMBuildings/OSMBuildings.debug.js"></script> -->
+</head>
+
+<body style="background-color:rgba(255,255,255,0.7)">
+    <h2>Six directions example</h2>
+    <p>This example displays the reference frame around the camera in Cartesian coordinates (x, y, x). It puts a image in the negative and positive directions: x is left/right; y is up/down; z is back front. A div is created in each of these directions and converted to cssObject (in three.js) at  200 units from the origin. These cssObjects are then added to the eyeOrigin. The eyeOrigin is the position of the camera: the cssObjects will always appear in the same locations relative to the camera. </p>  
   </body>
+  <script type="text/javascript" src="src/app.js"></script>
 </html>
