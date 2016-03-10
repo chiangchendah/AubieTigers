@@ -11,7 +11,7 @@
 // options.renderer = { klass: THREE.CSS3DRenderer }
 // var three = THREE.Bootstrap( options )
 var options = THREE.Bootstrap.createArgonOptions( Argon.immersiveContext )
-options.renderer = { klass: THREE.CSS3DRenderer }
+options.renderer = { klass: THREE.WebGLRenderer }
 var three = THREE.Bootstrap( options )
 
 var eyeOrigin = three.argon.objectFromEntity(Argon.immersiveContext.eyeOrigin)
@@ -93,7 +93,7 @@ var onError = function ( xhr ) {
     // objects.push( object );
 
     // Add each object our root node
-    root.add(object);
+    root.add(loader);
   }
 
 
