@@ -5,7 +5,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
-  
+    body {
+  font-family: Arial;
+}
+
+a {
+  color: #ffffff;
+}
+
+#menu {
+  position: absolute;
+  bottom: 50px;
+  width: 100%;
+  text-align: center;
+}
+
+button {
+  color: rgba(127,255,255,0.75);
+  background: transparent;
+  outline: 1px solid rgba(127,255,255,0.75);
+  border: 0px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: rgba(0,255,255,0.5);
+}
+button:active {
+  color: #000000;
+  background-color: rgba(0,255,255,0.75);
+}
   </style>
   <script src="./src/vendor/three.min.js"></script>
    <script src="./src/vendor/threestrap.js"></script>
@@ -17,8 +46,15 @@
 </head>
 
 <body style="background-color:rgba(255,255,255,0.7)">
-    <h2>Six directions example</h2>
-    <p>This example displays the reference frame around the camera in Cartesian coordinates (x, y, x). It puts a image in the negative and positive directions: x is left/right; y is up/down; z is back front. A div is created in each of these directions and converted to cssObject (in three.js) at  200 units from the origin. These cssObjects are then added to the eyeOrigin. The eyeOrigin is the position of the camera: the cssObjects will always appear in the same locations relative to the camera. </p>  
+    <div id="argon-immersive-context">
+      <div id="menu">
+        <button id="location">lon (0) lat (0)</button>
+      </div>
+    </div>
+    <div>
+    <h2>A Simple Geo example</h2>
+    <p>This example takes the current location of the viewer, and positions a cube at a well known nearby location (the Georgia Tech campus, for us), and creates a second cube a small distance away from where the viewer was positioned when the example was loaded.  We do this by adding a small amount to our current east-west location, in the local Three.js cartesian coordinates.  This illustrates how to create geospatial content based on the current location, and update the internal geospatial location of the object.</p>
+    </div>
   </body>
   <script type="text/javascript" src="src/app.js"></script>
 </html>

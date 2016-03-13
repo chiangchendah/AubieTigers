@@ -6,118 +6,100 @@
 
 // // retrieve the immersive context and initialize Three.js rendering
 // // AKA initialize Argon...
-// var context = Argon.immersiveContext
-// var options = THREE.Bootstrap.createArgonOptions( context )
+
+function toFixed(value, precision) {
+var power = Math.pow(10, precision || 0);
+return String(Math.round(value * power) / power);
+}
+  
+var context = Argon.immersiveContext
+var options = THREE.Bootstrap.createArgonOptions( context )
 // options.renderer = { klass: THREE.CSS3DRenderer }
-// var three = THREE.Bootstrap( options )
-var options = THREE.Bootstrap.createArgonOptions( Argon.immersiveContext )
-options.renderer = { klass: THREE.WebGLRenderer }
 var three = THREE.Bootstrap( options )
 
-var eyeOrigin = three.argon.objectFromEntity(Argon.immersiveContext.eyeOrigin)
-
-// This table gives information to be displayed and also the position and rotation vectors
-var table = [
-    // [ "N", "North", "(Negative Z)", 0, 0, -600, 0, 0, 0],
-    // [ "S", "South", "(Positive Z)", 0, 0, 600, 0, Math.PI, 0  ],
-    // [ "E", "East", "(Positive X)", 600, 0, 0, 0, -Math.PI/2, 0 ],
-    // [ "W", "West", "(Negative X)", -600, 0, 0, 0, Math.PI/2, 0 ],
-    // [ "U", "Up", "(Positive Y)", 0, 600, 0, Math.PI/2, 0, 0 ],
-    [ "D", "Down", "(Negative Y)", 0, -600, 0, Math.PI/2,  Math.PI, Math.PI]
-  ];
-
-  var objects = []
-
-  var root = new THREE.Object3D()
-
-  var onProgress = function ( xhr ) {
-    if ( xhr.lengthComputable ) {
-        var percentComplete = xhr.loaded / xhr.total * 100;
-        console.log( Math.round(percentComplete, 2) + '% downloaded' );
-    }
+var mapGeoObject = new THREE.Object3D();
+var map = new THREE.Object3D();
+var texture = new THREE.Texture();
+var onProgress = function ( xhr ) {
+	if ( xhr.lengthComputable ) {
+		var percentComplete = xhr.loaded / xhr.total * 100;
+		console.log( Math.round(percentComplete, 2) + '% downloaded' );
+	}
 };
 
 var onError = function ( xhr ) {
 };
+var manager = new THREE.LoadingManager();
+manager.onProgress = function ( item, loaded, total ) {
+	console.log( item, loaded, total);
+}
+var loader = new THREE.ImageLoader( manager );
+loader.load( 'UV_Grid_Sm.jpg',  function(image) {
+	texture.image = image;
+	texture.needsUpdate = true;
+});
+var loader = new THREE.OBJLoader( manager );
+loader.load( 'cs_italy.obj', function ( object ) {
+	object.traverse( function ( child ) {
+		if (child instanceof THREE.Mesh ) {
+			child.material.map = texture;
+		}
+	});
+	object.position.y = -95;
+	map.add(object);
+}, onProgress, onError );
+mapGeoObject.add(map)
+three.scene.add(mapGeoObject);
+var mapGeoEntity = three.argon.entityFromObject(mapGeoObject);
+
+var realityInit = false;
+var mapCartographicDeg = [0,0,0]
+
+three.on("argon:realityChange", function(e) {
+	realityInit = true;
+
+	var cameraPosition = three.camera.getWorldPosition();
+	cameraPosition.x += 5;
+	mapGeoObject.position.copy(cameraPosition);
+	three.argon.updateEntityFromObject(mapGeoObject);
+
+	mapCartographicDeg = three.argon.getCartographicDegreesFromEntity(mapGeoEntity) || [0,0,0];
+});
+
+var lastInfoText;
+
+three.on( "update", function(e) {
+	var elem = document.getElementById('location');
+	var state = e.argonState;
+
+	if (!realityInit) {
+		elem.innerText = "No Reality Yet";
+		return;
+	}
+
+	var gpsCartographicDeg = [0,0,0];
+	if(state.position.cartographicDegrees) {
+		gpsCartographicDeg = state.position.cartographicDegrees;
+	}
+
+	var cameraPos = three.camera.getWorldPosition();
+	var mapPos = map.getWorldPosition();
+	var distanceToMap = cameraPos.distanceTo(mapPos);
+
+	var infoText = "Geospatial Argon example:\n";
+
+	infoText += "eye (" + toFixed(gpsCartographicDeg[0],6) + ", ";
+    infoText += toFixed(gpsCartographicDeg[1], 6) + ", " + toFixed(gpsCartographicDeg[2], 2) + ")\n";
+    infoText += "cube(" + toFixed(mapCartographicDeg[0], 6) + ", ";
+    infoText += toFixed(mapCartographicDeg[1], 6) + ", " + toFixed(mapCartographicDeg[2], 2) + ")\n";
+    infoText += "distance to GT (" + toFixed(distanceToMap,2) + ")";
+
+    if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
+      elem.innerText = infoText;
+      lastInfoText = infoText;
+    }
+
+});
 
 
-  for ( var i = 0; i < table.length; i ++ ) {
-
-    var item = table[ i ];
-
-    var element = document.createElement( 'div' );
-    element.className = 'element';
-    element.style.backgroundColor = 'rgba(200,120,200,1)';
-
-    var manager = new THREE.LoadingManager();
-    manager.onProgress = function ( item, loaded, total ) {
-
-        console.log( item, loaded, total );
-
-    };
-
-    var texture = new THREE.Texture();
-
-    var loader = new THREE.ImageLoader( manager );
-    loader.load( 'UV_Grid_Sm.jpg', function ( image ) {
-
-        texture.image = image;
-        texture.needsUpdate = true;
-
-    } );
-
-    // model
-
-    var loader = new THREE.OBJLoader( manager );
-    loader.load( 'map.obj', function ( object ) {
-
-        object.traverse( function ( child ) {
-
-            if ( child instanceof THREE.Mesh ) {
-
-                child.material.map = texture;
-
-            }
-
-        } );
-
-        object.position.y = - 95;
-        // scene.add( object );
-
-    }, onProgress, onError );
-
-
-
-    // var object = new THREE.CSS3DObject( element );
-    // object.matrixAutoUpdate = false;
-    // objects.push( object );
-
-    // Add each object our root node
-    root.add(loader);
-  }
-
-
-    // Add the root node to our eyeOrigin
-    eyeOrigin.add(root)
-
-    // Now we just have to position the six elements at the compass points
-    
-  for ( var i = 0; i < objects.length; i ++ ) {
-
-    var item = table[ i ];
-    var target = new THREE.Object3D();
-    // three position values
-    target.position.x = item[ 3 ];
-    target.position.y = item[ 4 ];
-    target.position.z = item[ 5 ];
-    //the three axes of rotation
-      target.rotation.x = item[ 6 ];     
-      target.rotation.y = item[ 7 ];  
-      target.rotation.z = item[ 8 ];  
-    
-    object = objects[ i ];
-    object.position.copy(target.position)
-    object.rotation.copy(target.rotation)
-    object.updateMatrix()   
-  }
 
