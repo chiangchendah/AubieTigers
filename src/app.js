@@ -11,7 +11,7 @@ function toFixed(value, precision) {
 var power = Math.pow(10, precision || 0);
 return String(Math.round(value * power) / power);
 }
-  
+
 var context = Argon.immersiveContext
 var options = THREE.Bootstrap.createArgonOptions( context )
 // options.renderer = { klass: THREE.CSS3DRenderer }
@@ -38,16 +38,42 @@ loader.load( 'UV_Grid_Sm.jpg',  function(image) {
 	texture.image = image;
 	texture.needsUpdate = true;
 });
-var loader = new THREE.OBJLoader( manager );
-loader.load( 'cs_italy.obj', function ( object ) {
-	object.traverse( function ( child ) {
-		if (child instanceof THREE.Mesh ) {
-			child.material.map = texture;
-		}
-	});
-	object.position.y = -95;
-	map.add(object);
-}, onProgress, onError );
+
+// mtlLoader
+var mtlLoader = new THREE.MTLLoader();
+mtlLoader.setBaseUrl( 'src/Muhammer/' );
+mtlLoader.setPath( 'src/Muhammer/' );
+mtlLoader.load( 'Muhammer.mtl', function( materials ) {
+
+	materials.preload();
+
+  console.log("material loaded");
+	var objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials( materials );
+	objLoader.setPath( 'src/Muhammer/' );
+	objLoader.load( 'Muhammer.obj', function ( object ) {
+
+		console.log("Muhammer object loaded");
+		object.position.y = - 95;
+		map.add( object );
+
+	}, onProgress, onError );
+
+});
+
+
+
+
+// var loader = new THREE.OBJLoader( manager );
+// loader.load( 'src/Muhammer.obj', function ( object ) {
+// 	// object.traverse( function ( child ) {
+// 	// 	// if (child instanceof THREE.Mesh ) {
+// 	// 	// 	// child.material.map = texture;
+// 	// 	// }
+// 	// });
+// 	// object.position.y = -95;
+// 	map.add(object);
+// }, onProgress, onError );
 mapGeoObject.add(map)
 three.scene.add(mapGeoObject);
 var mapGeoEntity = three.argon.entityFromObject(mapGeoObject);
