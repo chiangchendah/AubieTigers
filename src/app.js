@@ -41,7 +41,6 @@ loader.load( 'UV_Grid_Sm.jpg',  function(image) {
 
 // mtlLoader
 var mtlLoader = new THREE.MTLLoader();
-mtlLoader.setBaseUrl( 'src/Muhammer/' );
 mtlLoader.setPath( 'src/Muhammer/' );
 mtlLoader.load( 'Muhammer.mtl', function( materials ) {
 
@@ -54,14 +53,21 @@ mtlLoader.load( 'Muhammer.mtl', function( materials ) {
 	objLoader.load( 'Muhammer.obj', function ( object ) {
 
 		console.log("Muhammer object loaded");
-		object.position.y = - 95;
+		object.position.y = - 10;
 		map.add( object );
 
 	}, onProgress, onError );
 
 });
 
+var ambient = new THREE.AmbientLight( 0x444444 );
+				three.scene.add( ambient );
 
+				var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+				directionalLight.position.set( 0, 0, 1 ).normalize();
+				three.scene.add( directionalLight );
+
+map.rotation.x = -1.57;
 
 
 // var loader = new THREE.OBJLoader( manager );
