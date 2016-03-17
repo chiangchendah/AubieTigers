@@ -1,25 +1,23 @@
 // /*
-//  * Entry file for SystemJS
+//  * AR Map
 //  **/
 
-// var Cesium = Argon.Cesium;
+// Argon Initialization
+var context = Argon.immersiveContext;
+var options = THREE.Bootstrap.createArgonOptions( context );
+options.renderer = { klass: THREE.WebGLRenderer };
+var three = THREE.Bootstrap( options );
 
-// // retrieve the immersive context and initialize Three.js rendering
-// // AKA initialize Argon...
+var mapGeoObject = new THREE.Object3D();
+var map = new THREE.Object3D();
+var streetcar = new THREE.Object3D();
 
+// Helpers
 function toFixed(value, precision) {
 	var power = Math.pow(10, precision || 0);
 	return String(Math.round(value * power) / power);
 }
 
-var context = Argon.immersiveContext
-var options = THREE.Bootstrap.createArgonOptions( context )
-// options.renderer = { klass: THREE.CSS3DRenderer }
-var three = THREE.Bootstrap( options )
-
-var mapGeoObject = new THREE.Object3D();
-var map = new THREE.Object3D();
-var texture = new THREE.Texture();
 var onProgress = function ( xhr ) {
 	if ( xhr.lengthComputable ) {
 		var percentComplete = xhr.loaded / xhr.total * 100;
@@ -34,17 +32,8 @@ var manager = new THREE.LoadingManager();
 manager.onProgress = function ( item, loaded, total ) {
 	console.log( item, loaded, total);
 }
-var loader = new THREE.ImageLoader( manager );
-loader.load( 'UV_Grid_Sm.jpg',  function(image) {
-	texture.image = image;
-	texture.needsUpdate = true;
-});
-
-
 
 // mtlLoader
-var streetcar = new THREE.Object3D();
-
 //code to load streetcar with material - but adding materials not working
 var mtlLoader = new THREE.MTLLoader();
 mtlLoader.setBaseUrl( 'src/Streetcar2/' );
@@ -71,55 +60,34 @@ mtlLoader.load( '3d-model.mtl', function( materials ) {
 });
 
 /* Code to load Auburn Ave Map */
-mtlLoader.load( '', function( materials ) {
-	// materials.preload();
-	// console.log("material loaded");
-	var objLoader = new THREE.OBJLoader();
-	// objLoader.setMaterials( materials );
-	objLoader.setPath( 'src/Map/' );
-	objLoader.load( 'streetmap.obj', function ( object ) {
-		console.log("object loaded");
+// mtlLoader.load( '', function( materials ) {
+// 	// materials.preload();
+// 	// console.log("material loaded");
+// 	var objLoader = new THREE.OBJLoader();
+// 	// objLoader.setMaterials( materials );
+// 	objLoader.setPath( 'src/Map/' );
+// 	objLoader.load( 'streetmap.obj', function ( object ) {
+// 		console.log("object loaded");
 
-		object.scale.set(100, 100, 100);
-		object.rotation.x = 3*Math.PI/2;
-		//object.position.y = -100;
-
-
-		map.add( object );
-
-	}, onProgress, onError );
-});
+// 		object.scale.set(100, 100, 100);
+// 		object.rotation.x = 3*Math.PI/2;
+// 		//object.position.y = -100;
 
 
-/* Code to load streetcar without the material */
-/*var loader = new THREE.OBJLoader( manager );
-loader.load( 'src/Streetcar2/3d-model.obj', function ( object ) {
-	object.traverse( function ( child ) {
-		if (child instanceof THREE.Mesh ) {
-			child.material.map = texture;
-		}
-	});
-	object.position.y = -95;
+// 		map.add( object );
+
+// 	}, onProgress, onError );
+// });
+
+/* Code to load Map without the material */
+var loader = new THREE.OBJLoader( manager );
+loader.load( 'src/Map/streetmap.obj', function ( object ) {
+	object.scale.set(100, 100, 100);
+	object.rotation.x = 3*Math.PI/2;
 	streetcar = object;
 	map.add(object);
 }, onProgress, onError );
-*/
-/* END code to load streetcar w/o material */
-
-/* Code to load Auburn Avenue map */
-// var aamap_loader = new THREE.OBJLoader( manager );
-// aamap_loader.load( 'src/Map/Auburn Ave Street Map.obj', function ( object ) {
-// 	object.traverse( function ( child ) {
-// 		if (child instanceof THREE.Mesh ) {
-// 			child.material.map = texture;
-// 		}
-// 	});
-// 	object.scale.set(0.3, 0.3, 0.3);
-// 	object.rotation.x = Math.PI/4;
-// 	object.position.y = -300;
-// 	map.add(object);
-// }, onProgress, onError );
-/* End code to load Auburn Avenue map */
+/* END code to load map w/o material */
 
 /* Add light */
 var ambient = new THREE.AmbientLight( 0x404040 );
@@ -128,15 +96,59 @@ three.scene.add( ambient );
 // directionalLight.position.set( 0, 0, 1 ).normalize();
 // three.scene.add( directionalLight );
 
-
-map.rotation.x = -1.57;
-
-mapGeoObject.add(map)
+// Setup scene
+map.rotation.x = - Math.PI / 2;
+mapGeoObject.add(map);
 three.scene.add(mapGeoObject);
-var mapGeoEntity = three.argon.entityFromObject(mapGeoObject);
 
+var mapGeoEntity = three.argon.entityFromObject(mapGeoObject);
 var realityInit = false;
-var mapCartographicDeg = [0,0,0]
+var mapCartographicDeg = [0,0,0];
+
+/* ************
+* Enable interactions with objects in Argon
+***************/
+var canvas = document.getElementsByTagName("canvas")[0];
+canvas.addEventListener('click', onClick);
+// canvas.addEventListener("touchstart", handleStart, false);
+// Raycaster
+var raycaster = new THREE.Raycaster();
+// helper variables
+var objX = 0;
+var objY = 0;
+var count = 0;
+var preObj = null;
+var mouse = new THREE.Vector2();
+var isScaled = false;
+
+function onClick(e) {
+	mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
+	mouse.y = - ( e.clientY / window.innerHeight ) * 2 + 1;
+	console.log("x: "+mouse.x+" y: "+mouse.y);
+	raycaster.setFromCamera(mouse, three.camera);
+    var intersects = raycaster.intersectObjects(mapGeoObject.children, true);
+    
+    if ((intersects.length > 0) && !isScaled) {
+        preObj = intersects;
+        isScaled = true;
+        for (var i = 0; i < intersects.length; i++ ) {
+            var obj = intersects[i].object;
+            console.log("Object"+ i+":"+obj);
+
+            obj.scale.x = 0.5;
+            obj.scale.y = 0.5;
+            obj.scale.z = 0.5;
+        }
+    } else if (isScaled) {
+        isScaled = false;
+        for (var i = 0; i < preObj.length; i++) {
+            var obj = preObj[i].object;
+            obj.scale.x = 1;
+            obj.scale.y = 1;
+            obj.scale.z = 1;
+        }
+    }
+}
 
 three.on("argon:realityChange", function(e) {
 	realityInit = true;
@@ -189,7 +201,7 @@ three.on( "update", function(e) {
 	var is_rotated1 = false;
 	var is_rotated2 = false;
 
-
+	// Hardcoded streetcar route
 	if(streetcar.position.x < 3000 && streetcar.position.z == -300) //need more conditions
 	{
 		streetcar.translateZ(10);
@@ -204,8 +216,5 @@ three.on( "update", function(e) {
 		streetcar.translateZ(-10);
 		//streetcar.translateZ(10);
 	}
-
-
-
 
 });
