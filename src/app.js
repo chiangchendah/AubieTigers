@@ -171,7 +171,6 @@ var loader = new THREE.OBJLoader( manager );
 loader.load( 'src/Map/streetmap.obj', function ( object ) {
 	object.scale.set(100, 100, 100);
 	object.rotation.x = 3*Math.PI/2;
-	streetcar = object;
 	map.add(object);
 }, onProgress, onError );
 /* END code to load map w/o material */
