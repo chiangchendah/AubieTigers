@@ -119,7 +119,7 @@ var rotateSpeed = 1.0,
 	zoomSpeed = 1.2,
 	panSpeed = 0.3,
 	noRotate = true,
-	noZoom = true,
+	noZoom = false,
 	noPan = false;
 
 var eye = new THREE.Vector3(),
@@ -149,6 +149,8 @@ var minDistance = 0,
 var target0 = target.clone(),
 	position0 = three.camera.position.clone(),
 	up0 = three.camera.up.clone();
+
+ var eyeDir;
 
 // canvas.addEventListener('click', onClick);
 canvas.addEventListener("touchstart", handleStart, false);
@@ -228,14 +230,20 @@ function zoomCamera() {
 	var factor;
 
 	if ( state === STATE.ZOOM ) {
-		factor = touchZoomDistanceStart / touchZoomDistanceEnd;
+		factor = touchZoomDistanceEnd / touchZoomDistanceStart;
 		touchZoomDistanceStart = touchZoomDistanceEnd;
-		eye.multiplyScalar(factor);
+		map.scale.x *= factor;
+		map.scale.y *= factor;
+		map.scale.z *= factor;
+
 	} else {
 		factor = 1.0 + (zoomEnd.y - zoomStart.y) * zoomSpeed;
 
 		if ( factor !== 1.0 && factor > 0.0 ) {
-			eye.multiplyScalar( factor );
+			// eye.multiplyScalar( factor );
+			map.scale.x *=factor;
+			map.scale.y *= factor;
+			map.scale.z *= factor;
 			if ( staticMoving ) {
 				zoomStart.copy( zoomEnd );
 			} else {
@@ -245,27 +253,36 @@ function zoomCamera() {
 	}
 }
 // function to pan camera
+var pan = new THREE.Vector3();
+var mouseChange = new THREE.Vector2();
 function panCamera() {
-	var mouseChange = new THREE.Vector2(),
-		objectUp = new THREE.Vector3(),
-		pan = new THREE.Vector3();
+	// var mouseChange = new THREE.Vector2();
+	var	objectUp = new THREE.Vector3();
+		// pan = new THREE.Vector3();
 
 	mouseChange.copy( panEnd ).sub( panStart );
+	
+	if ( state === STATE.ROTATE ) {
+		mouseChange.multiplyScalar( eyeDir.length() * panSpeed );
 
-	if ( mouseChange.lengthSq() ) {
-		mouseChange.multiplyScalar( eye.length() * panSpeed );
-
-		pan.copy( eye ).cross( three.camera.up ).setLength( mouseChange.x );
+		pan.copy( eyeDir ).cross( three.camera.up ).setLength( mouseChange.x );
 		pan.add( objectUp.copy( three.camera.up ).setLength( mouseChange.y ) );
 
-		three.camera.position.add( pan );
-		target.add( pan );
+		// three.camera.position.add( pan );
+		// target.add( pan );
+		var rx = new THREE.Vector3(1,0,0);
+		var ry = new THREE.Vector3(0,1,0);
+		var rz = new THREE.Vector3(0,0,1);
+		pan.applyAxisAngle(rx, -Math.PI/2);
+		// pan.applyAxisAngle(ry, Math.PI);
+		map.position.add(pan);
 
-		if ( staticMoving ) {
-			panStart.copy( panEnd );
-		} else {
+		// if ( staticMoving ) {
+		// 	panStart.copy( panEnd );
+		// } else {
 			panStart.add( mouseChange.subVectors( panEnd, panStart ).multiplyScalar( dynamicDampingFactor ) );
-		}
+		// }
+
 	}
 }
 // function to check distances
@@ -284,7 +301,7 @@ function checkDistances() {
 }
 // function to update
 function update() {
-	eye.subVectors( three.camera.position, target );
+	// eye.subVectors( three.camera.position, target );
 
 	if ( ! noRotate ) {
 		rotateCamera();
@@ -298,13 +315,13 @@ function update() {
 		panCamera();
 	}
 
-	three.camera.position.addVectors( target, eye );
-	checkDistances();
-	three.camera.lookAt( target );
+	// three.camera.position.addVectors( target, eye );
+	// checkDistances();
+	// three.camera.lookAt( target );
 
-	if ( lastPosition.distanceToSquared( three.camera.position ) > EPS ) {
-		lastPosition.cope( three.camera.position );
-	}
+	// if ( lastPosition.distanceToSquared( three.camera.position ) > EPS ) {
+	// 	lastPosition.cope( three.camera.position );
+	// }
 
 }
 // function to reset
@@ -329,6 +346,9 @@ function handleStart(e) {
  			state = STATE.ROTATE;
  			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
  			movePre.copy(moveCur);
+
+ 			panStart.copy(getMouseOnScreen(e.touches[0].pageX, e.touches[0].pageY));
+ 			panEnd.copy(panStart);
  			break;
  		default:
  			state = STATE.ZOOM;
@@ -336,10 +356,10 @@ function handleStart(e) {
  			var dy = e.touches[0].pageY - e.touches[1].pageY;
  			touchZoomDistanceEnd = touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
 
- 			var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
- 			var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
- 			panStart.copy(getMouseOnScreen(x, y));
- 			panEnd.copy(panStart);
+ 			// var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
+ 			// var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
+ 			// panStart.copy(getMouseOnScreen(x, y));
+ 			// panEnd.copy(panStart);
  			break;
  	}
 }
@@ -351,15 +371,17 @@ function handleMove(e) {
  		case 1: 
  			movePre.copy(moveCur);
  			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
+
+ 			panEnd.copy(getMouseOnScreen(e.touches[0].pageX, e.touches[0].pageY));
  			break;
  		default:
  			var dx = e.touches[0].pageX - e.touches[1].pageX;
  			var dy = e.touches[0].pageY - e.touches[1].pageY;
  			touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
 
- 			var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
- 			var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
- 			panEnd.copy(getMouseOnScreen(x, y));
+ 			// var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
+ 			// var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
+ 			// panEnd.copy(getMouseOnScreen(x, y));
  			break;
  	}
 }
@@ -373,8 +395,8 @@ function handleEnd(e) {
  			break;
  		case 1:
  			state = STATE.ROTATE;
- 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
- 			movePre.copy(moveCur);
+ 			// moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
+ 			// movePre.copy(moveCur);
  			break;
  	}
 }
@@ -493,6 +515,7 @@ three.on("argon:realityChange", function(e) {
 	cameraPosition.z -= 500;
 	// cameraPosition.z -= 1000;
 	mapGeoObject.position.copy(cameraPosition);
+	eyeDir = mapGeoObject.position.sub(three.camera.position);
 	three.argon.updateEntityFromObject(mapGeoObject);
 	mapCartographicDeg = three.argon.getCartographicDegreesFromEntity(mapGeoEntity) || [0,0,0];
 
@@ -528,9 +551,15 @@ three.on( "update", function(e) {
     // infoText += toFixed(mapCartographicDeg[1], 6) + ", " + toFixed(mapCartographicDeg[2], 2) + ")\n";
     // infoText += "distance to GT (" + toFixed(distanceToMap,2) + ")";
 
-	infoText += "x : " + three.camera.position.x + ", ";
-	infoText += "y : " + three.camera.position.y + ", ";
-	infoText += "reality changed : " + realityChanged + ", ";
+   
+	// infoText += "x : " + mapGeoObject.position.x + ", ";
+	infoText += "Pan x: " + pan.x + ", ";
+	infoText += "Pan y: " + pan.y + ", ";
+	infoText += "Pan z: " + pan.z + ", ";
+	// infoText += "y : " + mapGeoObject.position.y + ", ";
+	// infoText += "x : " + mouseChange.x + ", ";
+	// infoText += "y : " + mouseChange.y + ", ";
+	// infoText += "EyeL : " + eyeDir.length() + ", ";
 
 
     if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
