@@ -111,11 +111,16 @@ var mapCartographicDeg = [0,0,0];
 var canvas = document.getElementsByTagName("canvas")[0];
 
 // Variables for touch events
-var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1};
-var state = STATE.NONE;
+var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2};
+var state = STATE.NONE,
+	prevState = STATE.NONE;
 
 var rotateSpeed = 1.0,
-	zoomSpeed = 1.2;
+	zoomSpeed = 1.2,
+	panSpeed = 0.3,
+	noRotate = true,
+	noZoom = true,
+	noPan = false;
 
 var eye = new THREE.Vector3(),
 	movePre = new THREE.Vector2(),
@@ -129,10 +134,29 @@ var zoomStart = new THREE.Vector2(),
 var touchZoomDistanceStart = 0,
 	touchZoomDistanceEnd = 0;
 
+var staticMoving = false,
+	dynamicDampingFactor = 0.2;
+
+var target = new THREE.Vector3(),
+	lastPosition = new THREE.Vector3,
+	lastAxis = new THREE.Vector3(),
+	lastAngle = 0;
+
+var minDistance = 0,
+	maxDistance = Infinity,
+	EPS = 0.000001;
+
+var target0 = target.clone(),
+	position0 = three.camera.position.clone(),
+	up0 = three.camera.up.clone();
+
 // canvas.addEventListener('click', onClick);
 canvas.addEventListener("touchstart", handleStart, false);
 canvas.addEventListener("touchmove", handleMove, false);
 canvas.addEventListener("touchend", handleEnd, false);
+canvas.addEventListener("mousedown", mouseDown, false);
+window.addEventListener("keydown", keydown, false);
+window.addEventListener("keyup", keyup, false);
 // Raycaster
 var raycaster = new THREE.Raycaster();
 // helper variables
@@ -144,7 +168,10 @@ var mouse = new THREE.Vector2();
 var preMouse = new THREE.Vector2();
 var isScaled = false;
 
-// Helpers Functions
+/************************
+* Helpers Functions
+************************/
+// Normalize touch (x,y) to the screen size
 function getMouseOnScreen(pageX, pageY) {
 	var vector = new THREE.Vector2();
 	vector.set(
@@ -152,6 +179,387 @@ function getMouseOnScreen(pageX, pageY) {
 		pageY / window.innerHeight);
 	return vector;
 }
+// function to rotate camera
+function rotateCamera() {
+	var axis = new THREE.Vector3(),
+		quaternion = new THREE.Quaternion(),
+		eyeDirection = new THREE.Vector3(),
+		objectUpDirection = new THREE.Vector3(),
+		objectSidewaysDirection = new THREE.Vector3(),
+		moveDirection = new THREE.Vector3(),
+		angle;
+
+	moveDirection.set( moveCur.x - movePre.x, moveCur.y - movePre.y, 0 );
+	angle = moveDirection.length();
+
+	if ( angle ) {
+		eye.copy( three.camera.position ).sub( target );
+		eyeDirection.copy( eye ).normalize();
+		objectUpDirection.copy( three.camera.up ).normalize();
+		objectSidewaysDirection.crossVectors( objectUpDirection, eyeDirection ).normalize();
+
+		objectUpDirection.setLength( moveCur.y - movePre.y );
+		objectSidewaysDirection.setLength( moveCur.x - movePre.x );
+
+		moveDirection.copy( objectUpDirection.add( objectSidewaysDirection ) );
+
+		axis.crossVectors( moveDirection, eye ).normalize();
+
+		angle *= rotateSpeed;
+		quaternion.setFromAxisAngle( axis, angle );
+
+		eye.applyQuaternion( quaternion );
+		three.camera.up.applyQuaternion( quaternion );
+
+		lastAxis.copy( axis );
+		lastAngle = angle;
+	} else if ( ! staticMoving && lastAngle ) {
+		lastAngle *= Math.sqrt( 1.0 - dynamicDampingFactor );
+		eye.copy( three.camera.position ).sub( target );
+		quaternion.setFromAxisAngle( lastAxis, lastAngle );
+		eye.applyQuaternion( quaternion );
+		three.camera.up.applyQuaternion( quaternion );
+	}
+
+	movePre.copy( moveCur );
+}
+// function to zoom camera
+function zoomCamera() {
+	var factor;
+
+	if ( state === STATE.ZOOM ) {
+		factor = touchZoomDistanceStart / touchZoomDistanceEnd;
+		touchZoomDistanceStart = touchZoomDistanceEnd;
+		eye.multiplyScalar(factor);
+	} else {
+		factor = 1.0 + (zoomEnd.y - zoomStart.y) * zoomSpeed;
+
+		if ( factor !== 1.0 && factor > 0.0 ) {
+			eye.multiplyScalar( factor );
+			if ( staticMoving ) {
+				zoomStart.copy( zoomEnd );
+			} else {
+				zoomStart.y += ( zoomEnd.y - zoomStart.y ) * this.dynamicDampingFactor;
+			}
+		}
+	}
+}
+// function to pan camera
+function panCamera() {
+	var mouseChange = new THREE.Vector2(),
+		objectUp = new THREE.Vector3(),
+		pan = new THREE.Vector3();
+
+	mouseChange.copy( panEnd ).sub( panStart );
+
+	if ( mouseChange.lengthSq() ) {
+		mouseChange.multiplyScalar( eye.length() * panSpeed );
+
+		pan.copy( eye ).cross( three.camera.up ).setLength( mouseChange.x );
+		pan.add( objectUp.copy( three.camera.up ).setLength( mouseChange.y ) );
+
+		three.camera.position.add( pan );
+		target.add( pan );
+
+		if ( staticMoving ) {
+			panStart.copy( panEnd );
+		} else {
+			panStart.add( mouseChange.subVectors( panEnd, panStart ).multiplyScalar( dynamicDampingFactor ) );
+		}
+	}
+}
+// function to check distances
+function checkDistances() {
+	if ( ! noZoom || ! noPan ) {
+		if ( eye.lengthSq() > maxDistance * maxDistance ) {
+			three.camera.position.addVectors( target, eye.setLength( maxDistance ) );
+			zoomStart.copy( zoomEnd );
+		}
+
+		if ( eye.lengthSq() < minDistance * minDistance ) {
+			three.camera.position.addVectors( target, eye.setLength( minDistance ) );
+			zoomStart.copy( zoomEnd );
+		}
+	}
+}
+// function to update
+function update() {
+	eye.subVectors( three.camera.position, target );
+
+	if ( ! noRotate ) {
+		rotateCamera();
+	}
+
+	if ( ! noZoom ) {
+		zoomCamera();
+	}
+
+	if ( ! noPan ) {
+		panCamera();
+	}
+
+	three.camera.position.addVectors( target, eye );
+	checkDistances();
+	three.camera.lookAt( target );
+
+	if ( lastPosition.distanceToSquared( three.camera.position ) > EPS ) {
+		lastPosition.cope( three.camera.position );
+	}
+
+}
+// function to reset
+function reset() {
+	state = STATE.NONE;
+	prevState = STATE.NONE;
+
+	target.copy( target0 );
+	three.camera.position.copy( position0 );
+	three.camera.up.copy( up0 );
+
+	eye.subVectors( three.camera.position, target );
+	three.camera.lookAt( target );
+	lastPosition.copy( three.camera.position );
+}
+
+function handleStart(e) {
+	e.preventDefault();
+
+ 	switch (e.touches.length) {
+ 		case 1: 
+ 			state = STATE.ROTATE;
+ 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
+ 			movePre.copy(moveCur);
+ 			break;
+ 		default:
+ 			state = STATE.ZOOM;
+ 			var dx = e.touches[0].pageX - e.touches[1].pageX;
+ 			var dy = e.touches[0].pageY - e.touches[1].pageY;
+ 			touchZoomDistanceEnd = touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
+
+ 			var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
+ 			var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
+ 			panStart.copy(getMouseOnScreen(x, y));
+ 			panEnd.copy(panStart);
+ 			break;
+ 	}
+}
+
+function handleMove(e) {
+	e.preventDefault();
+
+ 	switch (e.touches.length) {
+ 		case 1: 
+ 			movePre.copy(moveCur);
+ 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
+ 			break;
+ 		default:
+ 			var dx = e.touches[0].pageX - e.touches[1].pageX;
+ 			var dy = e.touches[0].pageY - e.touches[1].pageY;
+ 			touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
+
+ 			var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
+ 			var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
+ 			panEnd.copy(getMouseOnScreen(x, y));
+ 			break;
+ 	}
+}
+
+function handleEnd(e) {
+	e.preventDefault();
+	
+ 	switch (e.touches.length) {
+ 		case 0: 
+ 			state = STATE.NONE;
+ 			break;
+ 		case 1:
+ 			state = STATE.ROTATE;
+ 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
+ 			movePre.copy(moveCur);
+ 			break;
+ 	}
+}
+var keys = [ 65 /*A*/, 83 /*S*/, 68 /*D*/ ];
+function keydown( event ) {
+
+	window.removeEventListener( 'keydown', keydown );
+
+	prevState = state;
+
+	if ( state !== STATE.NONE ) {
+
+		return;
+
+	} else if ( event.keyCode === keys[ STATE.ROTATE ] && ! noRotate ) {
+
+		state = STATE.ROTATE;
+
+	} else if ( event.keyCode === keys[ STATE.ZOOM ] && ! noZoom ) {
+
+		state = STATE.ZOOM;
+
+	} else if ( event.keyCode === keys[ STATE.PAN ] && ! noPan ) {
+
+		state = STATE.PAN;
+
+	}
+
+	console.log("Current state: " + state);
+
+}
+
+function keyup( event ) {
+
+	state = prevState;
+
+	window.addEventListener( 'keydown', keydown, false );
+
+}
+
+function mouseDown(e) {
+	e.preventDefault();
+	e.stopPropagation();
+
+	if ( state === STATE.NONE ) {
+
+		state = event.button;
+
+	}
+
+	if ( state === STATE.ROTATE && ! noRotate ) {
+
+		moveCur.copy( event.pageX, event.pageY );
+		movePre.copy( moveCur );
+
+	} else if ( state === STATE.ZOOM && ! noZoom ) {
+
+		zoomStart.copy( getMouseOnScreen( event.pageX, event.pageY ) );
+		zoomEnd.copy( zoomStart );
+
+	} else if ( state === STATE.PAN && ! noPan ) {
+
+		panStart.copy( getMouseOnScreen( event.pageX, event.pageY ) );
+		panEnd.copy( panStart );
+
+	}
+
+	document.addEventListener( 'mousemove', mousemove, false );
+	document.addEventListener( 'mouseup', mouseup, false );
+}
+
+function mousemove( event ) {
+
+	event.preventDefault();
+	event.stopPropagation();
+
+	if ( state === STATE.ROTATE && ! noRotate ) {
+
+		movePre.copy( moveCur );
+		moveCur.copy( event.pageX, event.pageY );
+
+	} else if ( state === STATE.ZOOM && ! noZoom ) {
+
+		zoomEnd.copy( getMouseOnScreen( event.pageX, event.pageY ) );
+
+	} else if ( state === STATE.PAN && ! noPan ) {
+
+		panEnd.copy( getMouseOnScreen( event.pageX, event.pageY ) );
+
+	}
+
+}
+
+function mouseup( event ) {
+
+	event.preventDefault();
+	event.stopPropagation();
+
+	state = STATE.NONE;
+
+	document.removeEventListener( 'mousemove', mousemove );
+	document.removeEventListener( 'mouseup', mouseup );
+}
+
+
+
+var realityChanged = 0;
+three.on("argon:realityChange", function(e) {
+	realityChanged++;
+	realityInit = true;
+	var cameraPosition = three.camera.getWorldPosition();
+
+	// Adjust the position of the map object, not the camera
+	cameraPosition.x -= 1000; // x is moving horizontally outward
+	cameraPosition.y += 1500;
+	cameraPosition.z -= 500;
+	// cameraPosition.z -= 1000;
+	mapGeoObject.position.copy(cameraPosition);
+	three.argon.updateEntityFromObject(mapGeoObject);
+	mapCartographicDeg = three.argon.getCartographicDegreesFromEntity(mapGeoEntity) || [0,0,0];
+
+	update();
+});
+
+var lastInfoText;
+
+three.on( "update", function(e) {
+	update();
+	var elem = document.getElementById('location');
+	var state = e.argonState;
+
+	if (!realityInit) {
+		elem.innerText = "No Reality Yet";
+		return;
+	}
+
+	var gpsCartographicDeg = [0,0,0];
+	if(state.position.cartographicDegrees) {
+		gpsCartographicDeg = state.position.cartographicDegrees;
+	}
+
+	var cameraPos = three.camera.getWorldPosition();
+	var mapPos = map.getWorldPosition();
+	var distanceToMap = cameraPos.distanceTo(mapPos);
+
+	var infoText = "Geospatial Argon example:\n";
+
+	// infoText += "eye (" + toFixed(gpsCartographicDeg[0],6) + ", ";
+    // infoText += toFixed(gpsCartographicDeg[1], 6) + ", " + toFixed(gpsCartographicDeg[2], 2) + ")\n";
+    // infoText += "cube(" + toFixed(mapCartographicDeg[0], 6) + ", ";
+    // infoText += toFixed(mapCartographicDeg[1], 6) + ", " + toFixed(mapCartographicDeg[2], 2) + ")\n";
+    // infoText += "distance to GT (" + toFixed(distanceToMap,2) + ")";
+
+	infoText += "x : " + three.camera.position.x + ", ";
+	infoText += "y : " + three.camera.position.y + ", ";
+	infoText += "reality changed : " + realityChanged + ", ";
+
+
+    if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
+      elem.innerText = infoText;
+      lastInfoText = infoText;
+    }
+
+	var is_rotated1 = false;
+	var is_rotated2 = false;
+
+	// update();
+	// Hardcoded streetcar route
+	if(streetcar.position.x < 3000 && streetcar.position.z == -300) //need more conditions
+	{
+		streetcar.translateZ(10);
+	}
+	else if (streetcar.position.z > -700 && streetcar.position.x == 3000)
+	{
+		streetcar.translateX(10); // original
+	}
+	else if (streetcar.position.z == -700 && streetcar.position.x > 0)
+	//else if (streetcar.position.x == -700 && streetcar.position.z < 0)
+	{
+		streetcar.translateZ(-10);
+		//streetcar.translateZ(10);
+	}
+
+});
+
 
 function onClick(e) {
 	mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
@@ -181,169 +589,3 @@ function onClick(e) {
         }
     }
 }
-var isTouched = false;
-function handleStart(e) {
-	e.preventDefault();
-	// isTouched = true;
-	// mouse.x = e.touches[0].pageX;
-	// mouse.y = e.touches[0].pageY;
-	// preMouse.x = mouse.x;
-	// preMouse.y = mouse.y;
-
-	// raycaster.setFromCamera(mouse, three.camera);
- //    var intersects = raycaster.intersectObjects(mapGeoObject.children, true);
-    
- //    if (intersects.length > 0) {
- //        preObj = intersects;
- //    } 
-
- 	switch (e.touches.length) {
- 		case 1: 
- 			state = STATE.ROTATE;
- 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
- 			movePre.copy(moveCur);
- 			break;
- 		default:
- 			state = STATE.ZOOM;
- 			var dx = e.touches[0].pageX - e.touches[1].pageX;
- 			var dy = e.touches[0].pageY - e.touches[1].pageY;
- 			touchZoomDistanceEnd = touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
-
- 			var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
- 			var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
- 			panStart.copy(getMouseOnScreen(x, y));
- 			panEnd.copy(panStart);
- 			break;
- 	}
-}
-
-function handleMove(e) {
-	e.preventDefault();
-	// mouse.x = ( e.touches[0].pageX / window.innerWidth ) * 2 - 1;
-	// mouse.y = - ( e.touches[0].pageY / window.innerHeight ) * 2 + 1;
-
-	// var diffX = mouse.x - preMouse.x;
-	// var diffY = mouse.y - preMouse.y;
-
-	// preMouse.x = mouse.x;
-	// preMouse.y = mouse.clientY;
-
-	// if (!isNaN(preObj.length)) {
- //        for (var i = 0; i < preObj.length; i++) {
- //            var obj = preObj[i].object;
- //            obj.position.x += diffX;
- //            obj.position.z += diffY;
- //        }
- //    }
-
- 	switch (e.touches.length) {
- 		case 1: 
- 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
- 			break;
- 		default:
- 			var dx = e.touches[0].pageX - e.touches[1].pageX;
- 			var dy = e.touches[0].pageY - e.touches[1].pageY;
- 			touchZoomDistanceEnd = touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
-
- 			var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
- 			var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
- 			panEnd.copy(getMouseOnScreen(x, y));
- 			break;
- 	}
-}
-
-function handleEnd(e) {
-	e.preventDefault();
-	// isTouched = false;
-	// mouse.x = 0;
-	// mouse.y = 0;
-	// preMouse.x = mouse.x;
-	// preMouse.y = mouse.clientY;
-    
- //    preObj = null;
- 	switch (e.touches.length) {
- 		case 0: 
- 			state = STATE.NONE;
- 			break;
- 		case 1:
- 			state = STATE.ROTATE;
- 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
- 			movePre.copy(moveCur);
- 			break;
- 	}
-}
-
-var realityChanged = 0;
-three.on("argon:realityChange", function(e) {
-	realityChanged++;
-	realityInit = true;
-	var cameraPosition = three.camera.getWorldPosition();
-
-	// Adjust the position of the map object, not the camera
-	cameraPosition.x -= 1000; // x is moving horizontally outward
-	cameraPosition.y += 1500;
-	cameraPosition.z -= 500;
-	// cameraPosition.z -= 1000;
-	mapGeoObject.position.copy(cameraPosition);
-	three.argon.updateEntityFromObject(mapGeoObject);
-	mapCartographicDeg = three.argon.getCartographicDegreesFromEntity(mapGeoEntity) || [0,0,0];
-});
-
-var lastInfoText;
-
-three.on( "update", function(e) {
-	var elem = document.getElementById('location');
-	var state = e.argonState;
-
-	if (!realityInit) {
-		elem.innerText = "No Reality Yet";
-		return;
-	}
-
-	var gpsCartographicDeg = [0,0,0];
-	if(state.position.cartographicDegrees) {
-		gpsCartographicDeg = state.position.cartographicDegrees;
-	}
-
-	var cameraPos = three.camera.getWorldPosition();
-	var mapPos = map.getWorldPosition();
-	var distanceToMap = cameraPos.distanceTo(mapPos);
-
-	var infoText = "Geospatial Argon example:\n";
-
-	// infoText += "eye (" + toFixed(gpsCartographicDeg[0],6) + ", ";
-    // infoText += toFixed(gpsCartographicDeg[1], 6) + ", " + toFixed(gpsCartographicDeg[2], 2) + ")\n";
-    // infoText += "cube(" + toFixed(mapCartographicDeg[0], 6) + ", ";
-    // infoText += toFixed(mapCartographicDeg[1], 6) + ", " + toFixed(mapCartographicDeg[2], 2) + ")\n";
-    // infoText += "distance to GT (" + toFixed(distanceToMap,2) + ")";
-
-	infoText += "x : " + mouse.x + ", ";
-	infoText += "y : " + mouse.y + ", ";
-	infoText += "reality changed : " + realityChanged + ", ";
-
-
-    if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
-      elem.innerText = infoText;
-      lastInfoText = infoText;
-    }
-
-	var is_rotated1 = false;
-	var is_rotated2 = false;
-
-	// Hardcoded streetcar route
-	if(streetcar.position.x < 3000 && streetcar.position.z == -300) //need more conditions
-	{
-		streetcar.translateZ(10);
-	}
-	else if (streetcar.position.z > -700 && streetcar.position.x == 3000)
-	{
-		streetcar.translateX(10); // original
-	}
-	else if (streetcar.position.z == -700 && streetcar.position.x > 0)
-	//else if (streetcar.position.x == -700 && streetcar.position.z < 0)
-	{
-		streetcar.translateZ(-10);
-		//streetcar.translateZ(10);
-	}
-
-});
