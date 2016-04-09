@@ -38,12 +38,12 @@ manager.onProgress = function ( item, loaded, total ) {
 var mtlLoader = new THREE.MTLLoader();
 mtlLoader.setBaseUrl('src/Streetcar2/');
 mtlLoader.setPath('src/Streetcar2/');
-mtlLoader.load('3d-model.mtl', function(materials) {
+mtlLoader.load('the_slim_streetcar.mtl', function(materials) {
 	materials.preload();
 	var objLoader = new THREE.OBJLoader();
 	objLoader.setMaterials(materials);
 	objLoader.setPath('src/Streetcar2/');
-	objLoader.load( '3d-model.obj', function (object) {
+	objLoader.load( 'the_slim_streetcar.obj', function (object) {
 		object.scale.set(1, 1, 1);
 		object.position.z = -300; // negative goes left, positive goes right
 		object.position.x = 200; //negative is backwards, positive is forward
