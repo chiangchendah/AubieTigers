@@ -115,16 +115,11 @@ var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2};
 var state = STATE.NONE,
 	prevState = STATE.NONE;
 
-var rotateSpeed = 1.0,
-	zoomSpeed = 1.2,
+var zoomSpeed = 1.2,
 	panSpeed = 0.3,
 	noRotate = true,
 	noZoom = false,
 	noPan = false;
-
-var eye = new THREE.Vector3(),
-	movePre = new THREE.Vector2(),
-	moveCur = new THREE.Vector2();
 
 var zoomStart = new THREE.Vector2(),
 	zoomEnd = new THREE.Vector2(),
@@ -137,28 +132,13 @@ var touchZoomDistanceStart = 0,
 var staticMoving = false,
 	dynamicDampingFactor = 0.2;
 
-var target = new THREE.Vector3(),
-	lastPosition = new THREE.Vector3,
-	lastAxis = new THREE.Vector3(),
-	lastAngle = 0;
-
-var minDistance = 0,
-	maxDistance = Infinity,
-	EPS = 0.000001;
-
-var target0 = target.clone(),
-	position0 = three.camera.position.clone(),
-	up0 = three.camera.up.clone();
-
- var eyeDir;
+ var eyeDir = new THREE.Vector3();
 
 // canvas.addEventListener('click', onClick);
 canvas.addEventListener("touchstart", handleStart, false);
 canvas.addEventListener("touchmove", handleMove, false);
 canvas.addEventListener("touchend", handleEnd, false);
-canvas.addEventListener("mousedown", mouseDown, false);
-window.addEventListener("keydown", keydown, false);
-window.addEventListener("keyup", keyup, false);
+
 // Raycaster
 var raycaster = new THREE.Raycaster();
 // helper variables
@@ -181,50 +161,7 @@ function getMouseOnScreen(pageX, pageY) {
 		pageY / window.innerHeight);
 	return vector;
 }
-// function to rotate camera
-function rotateCamera() {
-	var axis = new THREE.Vector3(),
-		quaternion = new THREE.Quaternion(),
-		eyeDirection = new THREE.Vector3(),
-		objectUpDirection = new THREE.Vector3(),
-		objectSidewaysDirection = new THREE.Vector3(),
-		moveDirection = new THREE.Vector3(),
-		angle;
 
-	moveDirection.set( moveCur.x - movePre.x, moveCur.y - movePre.y, 0 );
-	angle = moveDirection.length();
-
-	if ( angle ) {
-		eye.copy( three.camera.position ).sub( target );
-		eyeDirection.copy( eye ).normalize();
-		objectUpDirection.copy( three.camera.up ).normalize();
-		objectSidewaysDirection.crossVectors( objectUpDirection, eyeDirection ).normalize();
-
-		objectUpDirection.setLength( moveCur.y - movePre.y );
-		objectSidewaysDirection.setLength( moveCur.x - movePre.x );
-
-		moveDirection.copy( objectUpDirection.add( objectSidewaysDirection ) );
-
-		axis.crossVectors( moveDirection, eye ).normalize();
-
-		angle *= rotateSpeed;
-		quaternion.setFromAxisAngle( axis, angle );
-
-		eye.applyQuaternion( quaternion );
-		three.camera.up.applyQuaternion( quaternion );
-
-		lastAxis.copy( axis );
-		lastAngle = angle;
-	} else if ( ! staticMoving && lastAngle ) {
-		lastAngle *= Math.sqrt( 1.0 - dynamicDampingFactor );
-		eye.copy( three.camera.position ).sub( target );
-		quaternion.setFromAxisAngle( lastAxis, lastAngle );
-		eye.applyQuaternion( quaternion );
-		three.camera.up.applyQuaternion( quaternion );
-	}
-
-	movePre.copy( moveCur );
-}
 // function to zoom camera
 function zoomCamera() {
 	var factor;
@@ -262,14 +199,12 @@ function panCamera() {
 
 	mouseChange.copy( panEnd ).sub( panStart );
 	
-	if ( state === STATE.ROTATE ) {
+	if ( state === STATE.PAN ) {
 		mouseChange.multiplyScalar( eyeDir.length() * panSpeed );
 
 		pan.copy( eyeDir ).cross( three.camera.up ).setLength( mouseChange.x );
 		pan.add( objectUp.copy( three.camera.up ).setLength( mouseChange.y ) );
 
-		// three.camera.position.add( pan );
-		// target.add( pan );
 		var rx = new THREE.Vector3(1,0,0);
 		var ry = new THREE.Vector3(0,1,0);
 		var rz = new THREE.Vector3(0,0,1);
@@ -277,35 +212,15 @@ function panCamera() {
 		// pan.applyAxisAngle(ry, Math.PI);
 		map.position.add(pan);
 
-		// if ( staticMoving ) {
-		// 	panStart.copy( panEnd );
-		// } else {
-			panStart.add( mouseChange.subVectors( panEnd, panStart ).multiplyScalar( dynamicDampingFactor ) );
-		// }
+		panStart.add( mouseChange.subVectors( panEnd, panStart ).multiplyScalar( dynamicDampingFactor ) );
 
 	}
 }
-// function to check distances
-function checkDistances() {
-	if ( ! noZoom || ! noPan ) {
-		if ( eye.lengthSq() > maxDistance * maxDistance ) {
-			three.camera.position.addVectors( target, eye.setLength( maxDistance ) );
-			zoomStart.copy( zoomEnd );
-		}
 
-		if ( eye.lengthSq() < minDistance * minDistance ) {
-			three.camera.position.addVectors( target, eye.setLength( minDistance ) );
-			zoomStart.copy( zoomEnd );
-		}
-	}
-}
 // function to update
 function update() {
-	// eye.subVectors( three.camera.position, target );
-
-	if ( ! noRotate ) {
-		rotateCamera();
-	}
+	
+	// eyeDir = map.position.sub(three.camera.position);
 
 	if ( ! noZoom ) {
 		zoomCamera();
@@ -315,27 +230,6 @@ function update() {
 		panCamera();
 	}
 
-	// three.camera.position.addVectors( target, eye );
-	// checkDistances();
-	// three.camera.lookAt( target );
-
-	// if ( lastPosition.distanceToSquared( three.camera.position ) > EPS ) {
-	// 	lastPosition.cope( three.camera.position );
-	// }
-
-}
-// function to reset
-function reset() {
-	state = STATE.NONE;
-	prevState = STATE.NONE;
-
-	target.copy( target0 );
-	three.camera.position.copy( position0 );
-	three.camera.up.copy( up0 );
-
-	eye.subVectors( three.camera.position, target );
-	three.camera.lookAt( target );
-	lastPosition.copy( three.camera.position );
 }
 
 function handleStart(e) {
@@ -343,10 +237,7 @@ function handleStart(e) {
 
  	switch (e.touches.length) {
  		case 1: 
- 			state = STATE.ROTATE;
- 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
- 			movePre.copy(moveCur);
-
+ 			state = STATE.PAN;
  			panStart.copy(getMouseOnScreen(e.touches[0].pageX, e.touches[0].pageY));
  			panEnd.copy(panStart);
  			break;
@@ -369,9 +260,6 @@ function handleMove(e) {
 
  	switch (e.touches.length) {
  		case 1: 
- 			movePre.copy(moveCur);
- 			moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
-
  			panEnd.copy(getMouseOnScreen(e.touches[0].pageX, e.touches[0].pageY));
  			break;
  		default:
@@ -393,115 +281,8 @@ function handleEnd(e) {
  		case 0: 
  			state = STATE.NONE;
  			break;
- 		case 1:
- 			state = STATE.ROTATE;
- 			// moveCur.copy(e.touches[0].pageX, e.touches[0].pageY);
- 			// movePre.copy(moveCur);
- 			break;
  	}
 }
-var keys = [ 65 /*A*/, 83 /*S*/, 68 /*D*/ ];
-function keydown( event ) {
-
-	window.removeEventListener( 'keydown', keydown );
-
-	prevState = state;
-
-	if ( state !== STATE.NONE ) {
-
-		return;
-
-	} else if ( event.keyCode === keys[ STATE.ROTATE ] && ! noRotate ) {
-
-		state = STATE.ROTATE;
-
-	} else if ( event.keyCode === keys[ STATE.ZOOM ] && ! noZoom ) {
-
-		state = STATE.ZOOM;
-
-	} else if ( event.keyCode === keys[ STATE.PAN ] && ! noPan ) {
-
-		state = STATE.PAN;
-
-	}
-
-	console.log("Current state: " + state);
-
-}
-
-function keyup( event ) {
-
-	state = prevState;
-
-	window.addEventListener( 'keydown', keydown, false );
-
-}
-
-function mouseDown(e) {
-	e.preventDefault();
-	e.stopPropagation();
-
-	if ( state === STATE.NONE ) {
-
-		state = event.button;
-
-	}
-
-	if ( state === STATE.ROTATE && ! noRotate ) {
-
-		moveCur.copy( event.pageX, event.pageY );
-		movePre.copy( moveCur );
-
-	} else if ( state === STATE.ZOOM && ! noZoom ) {
-
-		zoomStart.copy( getMouseOnScreen( event.pageX, event.pageY ) );
-		zoomEnd.copy( zoomStart );
-
-	} else if ( state === STATE.PAN && ! noPan ) {
-
-		panStart.copy( getMouseOnScreen( event.pageX, event.pageY ) );
-		panEnd.copy( panStart );
-
-	}
-
-	document.addEventListener( 'mousemove', mousemove, false );
-	document.addEventListener( 'mouseup', mouseup, false );
-}
-
-function mousemove( event ) {
-
-	event.preventDefault();
-	event.stopPropagation();
-
-	if ( state === STATE.ROTATE && ! noRotate ) {
-
-		movePre.copy( moveCur );
-		moveCur.copy( event.pageX, event.pageY );
-
-	} else if ( state === STATE.ZOOM && ! noZoom ) {
-
-		zoomEnd.copy( getMouseOnScreen( event.pageX, event.pageY ) );
-
-	} else if ( state === STATE.PAN && ! noPan ) {
-
-		panEnd.copy( getMouseOnScreen( event.pageX, event.pageY ) );
-
-	}
-
-}
-
-function mouseup( event ) {
-
-	event.preventDefault();
-	event.stopPropagation();
-
-	state = STATE.NONE;
-
-	document.removeEventListener( 'mousemove', mousemove );
-	document.removeEventListener( 'mouseup', mouseup );
-}
-
-
 
 var realityChanged = 0;
 three.on("argon:realityChange", function(e) {
