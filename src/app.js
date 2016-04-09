@@ -59,6 +59,93 @@ mtlLoader.load( '3d-model.mtl', function( materials ) {
 	}, onProgress, onError );
 });
 
+/********
+Create the curved track for the streetcar and enable animation.
+*********/
+var spline_curve = new THREE.SplineCurve3( [
+	new THREE.Vector3(-160, 0, -980),
+	new THREE.Vector3(30, 0, -1450),
+	new THREE.Vector3(30, 0, -1680),
+	new THREE.Vector3(-20, 0, -1750),
+	new THREE.Vector3(-180, 0, -1750),
+	new THREE.Vector3(-200, 0, -1750),
+	new THREE.Vector3(-460, 0, -2150),
+	new THREE.Vector3(-530, 0, -2210),
+	new THREE.Vector3(-920, 0, -2220),
+	new THREE.Vector3(-980, 0, -2170),
+	new THREE.Vector3(-980, 0, -2000),
+	new THREE.Vector3(-960, 0, -1960),
+	new THREE.Vector3(-860, 0, -1930),
+	new THREE.Vector3(-770, 0, -1850),
+	new THREE.Vector3(-610, 0, -1600),
+	new THREE.Vector3(-300, 0, -1120),
+	new THREE.Vector3(-195, 0, -950),
+	new THREE.Vector3(-100, 0, -800),
+	new THREE.Vector3(-70, 0, -700),
+	new THREE.Vector3(-165, 0, -390),
+	new THREE.Vector3(-100, 0, -290),
+	new THREE.Vector3(550, 0, -290),
+	new THREE.Vector3(700, 0, -285),
+	new THREE.Vector3(1495, 0, -280),
+	new THREE.Vector3(1650, 0, -270),
+	new THREE.Vector3(2800, 0, -260),
+	new THREE.Vector3(3050, 0, -250),
+	new THREE.Vector3(3100, 0, -320),
+	new THREE.Vector3(3100, 0, -600),
+	new THREE.Vector3(3050, 0, -670),
+	new THREE.Vector3(3000, 0, -670),
+	new THREE.Vector3(2500, 0, -680),
+	new THREE.Vector3(2000, 0, -680),
+	new THREE.Vector3(1500, 0, -690),
+	new THREE.Vector3(90, 0, -705),
+	//new THREE.Vector3(0, 0, -740),
+	new THREE.Vector3(-120, 0, -900),
+	new THREE.Vector3(-150, 0, -930),
+	new THREE.Vector3(-160, 0, -960),
+	new THREE.Vector3(-160, 0, -990),
+	//new THREE.Vector3(-140, 0, -1000),
+] );
+
+var spline_geom = new THREE.Geometry();
+var spline_points = spline_curve.getPoints(1000); //get X points on the spline
+var spline_material = new THREE.LineBasicMaterial({ opacity: 0, transparent: true});
+
+for( var i = 0; i < spline_points.length; i++ ) {
+	spline_geom.vertices.push(spline_points[i]);
+}
+
+//Create the final Object3d to add to the scene
+var spline_object = new THREE.Line(spline_geom, spline_material);
+map.add(spline_object);
+
+/* The following four variables are used in the moveStreetcar function */
+var counter = 0;
+var tangent = new THREE.Vector3();
+var axis = new THREE.Vector3();
+var up = new THREE.Vector3(0, 0, 1);
+
+//Functions to animate the streetcar along the spline
+function moveStreetcar() {
+	if ( counter <= 1 ) {
+		streetcar.position.copy(spline_curve.getPointAt(counter));
+        tangent = spline_curve.getTangentAt(counter).normalize();
+        axis.crossVectors(up, tangent).normalize();
+        var radians = Math.acos(up.dot(tangent));
+        streetcar.quaternion.setFromAxisAngle(axis, radians);
+        counter += 0.002;
+	} else {
+		counter = 0;
+	}
+}
+
+function animate() {
+	requestAnimationFrame(animate);
+	three.renderer.render(three.scene, three.camera );
+}
+
+animate();
+setInterval(moveStreetcar, 100);
+
 /* Code to load Auburn Ave Map */
 // mtlLoader.load( '', function( materials ) {
 // 	// materials.preload();
@@ -127,7 +214,7 @@ function onClick(e) {
 	console.log("x: "+mouse.x+" y: "+mouse.y);
 	raycaster.setFromCamera(mouse, three.camera);
     var intersects = raycaster.intersectObjects(mapGeoObject.children, true);
-    
+
     if ((intersects.length > 0) && !isScaled) {
         preObj = intersects;
         isScaled = true;
@@ -150,14 +237,18 @@ function onClick(e) {
     }
 }
 
+
 three.on("argon:realityChange", function(e) {
 	realityInit = true;
 	var cameraPosition = three.camera.getWorldPosition();
-	cameraPosition.x += 100; // x is moving horizontally outward
-	cameraPosition.y += 500;
+
+	cameraPosition.x += -800; // x is moving horizontally outward
+	cameraPosition.y += 1500;
+	cameraPosition.z += -400;
 	mapGeoObject.position.copy(cameraPosition);
 	three.argon.updateEntityFromObject(mapGeoObject);
 	mapCartographicDeg = three.argon.getCartographicDegreesFromEntity(mapGeoEntity) || [0,0,0];
+
 });
 
 var lastInfoText;
@@ -196,25 +287,7 @@ three.on( "update", function(e) {
     if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
       elem.innerText = infoText;
       lastInfoText = infoText;
-    }
+  	}
 
-	var is_rotated1 = false;
-	var is_rotated2 = false;
-
-	// Hardcoded streetcar route
-	if(streetcar.position.x < 3000 && streetcar.position.z == -300) //need more conditions
-	{
-		streetcar.translateZ(10);
-	}
-	else if (streetcar.position.z > -700 && streetcar.position.x == 3000)
-	{
-		streetcar.translateX(10); // original
-	}
-	else if (streetcar.position.z == -700 && streetcar.position.x > 0)
-	//else if (streetcar.position.x == -700 && streetcar.position.z < 0)
-	{
-		streetcar.translateZ(-10);
-		//streetcar.translateZ(10);
-	}
 
 });
