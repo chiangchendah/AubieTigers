@@ -36,19 +36,15 @@ manager.onProgress = function ( item, loaded, total ) {
 // mtlLoader
 //code to load streetcar with material - but adding materials not working
 var mtlLoader = new THREE.MTLLoader();
-mtlLoader.setBaseUrl( 'src/Streetcar2/' );
-mtlLoader.setPath( 'src/Streetcar2/' );
-mtlLoader.load( '3d-model.mtl', function( materials ) {
+mtlLoader.setBaseUrl('src/Streetcar2/');
+mtlLoader.setPath('src/Streetcar2/');
+mtlLoader.load('3d-model.mtl', function(materials) {
 	materials.preload();
-	console.log("material loaded");
 	var objLoader = new THREE.OBJLoader();
-	objLoader.setMaterials( materials );
-	objLoader.setPath( 'src/Streetcar2/' );
-	objLoader.load( '3d-model.obj', function ( object ) {
-		console.log("object loaded");
-
-		object.scale.set(0.01, 0.01, 0.01);
-		//object.position.y = -250; // negative goes down, positive goes up
+	objLoader.setMaterials(materials);
+	objLoader.setPath('src/Streetcar2/');
+	objLoader.load( '3d-model.obj', function (object) {
+		object.scale.set(1, 1, 1);
 		object.position.z = -300; // negative goes left, positive goes right
 		object.position.x = 200; //negative is backwards, positive is forward
 		object.rotation.y = Math.PI/2;
@@ -145,26 +141,6 @@ function animate() {
 
 animate();
 setInterval(moveStreetcar, 100);
-
-/* Code to load Auburn Ave Map */
-// mtlLoader.load( '', function( materials ) {
-// 	// materials.preload();
-// 	// console.log("material loaded");
-// 	var objLoader = new THREE.OBJLoader();
-// 	// objLoader.setMaterials( materials );
-// 	objLoader.setPath( 'src/Map/' );
-// 	objLoader.load( 'streetmap.obj', function ( object ) {
-// 		console.log("object loaded");
-
-// 		object.scale.set(100, 100, 100);
-// 		object.rotation.x = 3*Math.PI/2;
-// 		//object.position.y = -100;
-
-
-// 		map.add( object );
-
-// 	}, onProgress, onError );
-// });
 
 /* Code to load Map without the material */
 var loader = new THREE.OBJLoader( manager );
