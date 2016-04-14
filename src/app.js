@@ -216,7 +216,7 @@ var staticMoving = false,
 
  var eyeDir = new THREE.Vector3();
 
-// canvas.addEventListener('click', onClick);
+canvas.addEventListener('click', onClick);
 canvas.addEventListener("touchstart", handleStart, false);
 canvas.addEventListener("touchmove", handleMove, false);
 canvas.addEventListener("touchend", handleEnd, false);
@@ -442,12 +442,18 @@ function onClick(e) {
         isScaled = true;
         for (var i = 0; i < intersects.length; i++ ) {
             var obj = intersects[i].object;
-            console.log("Object"+ i+":"+obj);
+            console.log("Object"+ i+":"+obj.name);
 
-            obj.scale.x = 0.5;
-            obj.scale.y = 0.5;
-            obj.scale.z = 0.5;
+            // obj.scale.x = 0.5;
+            // obj.scale.y = 0.5;
+            // obj.scale.z = 0.5;
+            if (directionsService) {
+            	calculateAndDisplayRoute(directionsService);            	
+            } else {
+            	console.log("Not initiated");
+            }
         }
+
     } else if (isScaled) {
         isScaled = false;
         for (var i = 0; i < preObj.length; i++) {
@@ -457,4 +463,64 @@ function onClick(e) {
             obj.scale.z = 1;
         }
     }
+}
+
+var tenthandhome = "251 10th St NW, Atlanta, GA 30318";
+var startLocation = tenthandhome;
+var endLocation = tenthandhome;
+var directionsService;
+// Google Map Direction Services
+function initMap() {
+	directionsService = new google.maps.DirectionsService;
+	// var directionsDisplay = new google.maps.DirectionsRenderer;
+	// var map = new google.maps.Map(document.getElementById('map'), {
+	//   zoom: 7,
+	//   center: {lat: 41.85, lng: -87.65}
+	// });
+	// directionsDisplay.setMap(map);
+
+	var onChangeHandler = function() {
+	  calculateAndDisplayRoute(directionsService);
+	};
+	// document.getElementById('start').addEventListener('change', onChangeHandler);
+	// document.getElementById('end').addEventListener('change', onChangeHandler);
+
+	if (navigator.geolocation) {
+	    navigator.geolocation.getCurrentPosition(function(position) {
+	      var pos = {
+	        lat: position.coords.latitude,
+	        lng: position.coords.longitude
+	      };
+	      startLocation = pos;
+	      console.log(pos);
+	      console.log("Current location loaded!");
+	    }, function() {
+	      handleLocationError(true, pos);
+	    });
+	  } else {
+	    // Browser doesn't support Geolocation
+	    console.log("Browser doesn't support geolocation");
+	  }
+}
+
+function calculateAndDisplayRoute(directionsService) {
+	directionsService.route({
+	  origin: startLocation,
+	  destination: endLocation,
+	  travelMode: google.maps.TravelMode.WALKING
+	}, function(response, status) {
+	  if (status === google.maps.DirectionsStatus.OK) {
+	    // directionsDisplay.setDirections(response);
+	    console.log(response.routes[0].legs[0].steps);
+	  } else {
+	    console.log('Directions request failed due to ' + status);
+	  }
+	});
+}
+
+function handleLocationError(browserHasGeolocation, pos) {
+  console.log(pos);
+  console.log(browserHasGeolocation ?
+                        'Error: The Geolocation service failed.' :
+                        'Error: Your browser doesn\'t support geolocation.');
 }
