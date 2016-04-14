@@ -33,8 +33,9 @@ manager.onProgress = function ( item, loaded, total ) {
 	console.log( item, loaded, total);
 }
 
-// mtlLoader
-//code to load streetcar with material - but adding materials not working
+/*****
+Load Streetcar with Material
+******/
 var mtlLoader = new THREE.MTLLoader();
 mtlLoader.setBaseUrl('src/Streetcar2/');
 mtlLoader.setPath('src/Streetcar2/');
@@ -48,10 +49,38 @@ mtlLoader.load('the_slim_streetcar.mtl', function(materials) {
 		object.position.z = -300; // negative goes left, positive goes right
 		object.position.x = 200; //negative is backwards, positive is forward
 		object.rotation.y = Math.PI/2;
-
 		map.add( object );
 		streetcar = object;
 
+	}, onProgress, onError );
+});
+
+/*****
+Load Map
+******/
+var loader = new THREE.OBJLoader(manager);
+loader.load( 'src/Map/streetmap.obj', function (object) {
+	object.scale.set(100, 100, 100);
+	object.rotation.x = 3*Math.PI/2;
+	console.log("Map position: " + object.position.y);
+	map.add(object);
+}, onProgress, onError);
+
+/*****
+Load Map base
+******/
+var basemtlLoader = new THREE.MTLLoader();
+basemtlLoader.setBaseUrl('src/Map/');
+basemtlLoader.setPath('src/Map/');
+basemtlLoader.load('aqua_auburn.mtl', function (materials) {
+	materials.preload();
+	var objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials(materials);
+	objLoader.load( 'src/Map/aqua_auburn.obj', function (object) {
+		object.scale.set(100, 100, 100);
+		object.rotation.x = 3 * Math.PI/2;
+
+		map.add(object);
 	}, onProgress, onError );
 });
 
@@ -141,15 +170,6 @@ function animate() {
 
 animate();
 setInterval(moveStreetcar, 100);
-
-/* Code to load Map without the material */
-var loader = new THREE.OBJLoader( manager );
-loader.load( 'src/Map/streetmap.obj', function ( object ) {
-	object.scale.set(100, 100, 100);
-	object.rotation.x = 3*Math.PI/2;
-	map.add(object);
-}, onProgress, onError );
-/* END code to load map w/o material */
 
 /* Add light */
 var ambient = new THREE.AmbientLight( 0x404040 );
@@ -260,7 +280,7 @@ function panCamera() {
 		// pan = new THREE.Vector3();
 
 	mouseChange.copy( panEnd ).sub( panStart );
-	
+
 	if ( state === STATE.PAN ) {
 		mouseChange.multiplyScalar( eyeDir.length() * panSpeed );
 
@@ -281,7 +301,7 @@ function panCamera() {
 
 // function to update
 function update() {
-	
+
 	// eyeDir = map.position.sub(three.camera.position);
 
 	if ( ! noZoom ) {
@@ -298,7 +318,7 @@ function handleStart(e) {
 	e.preventDefault();
 
  	switch (e.touches.length) {
- 		case 1: 
+ 		case 1:
  			state = STATE.PAN;
  			panStart.copy(getMouseOnScreen(e.touches[0].pageX, e.touches[0].pageY));
  			panEnd.copy(panStart);
@@ -321,7 +341,7 @@ function handleMove(e) {
 	e.preventDefault();
 
  	switch (e.touches.length) {
- 		case 1: 
+ 		case 1:
  			panEnd.copy(getMouseOnScreen(e.touches[0].pageX, e.touches[0].pageY));
  			break;
  		default:
@@ -338,9 +358,9 @@ function handleMove(e) {
 
 function handleEnd(e) {
 	e.preventDefault();
-	
+
  	switch (e.touches.length) {
- 		case 0: 
+ 		case 0:
  			state = STATE.NONE;
  			break;
  	}
@@ -353,7 +373,7 @@ three.on("argon:realityChange", function(e) {
 	var cameraPosition = three.camera.getWorldPosition();
 
 	cameraPosition.x += -800; // x is moving horizontally outward
-	cameraPosition.y += 1500;
+	cameraPosition.y += 4000;
 	cameraPosition.z += -400;
 	mapGeoObject.position.copy(cameraPosition);
 	eyeDir = mapGeoObject.position.sub(three.camera.position);
@@ -391,7 +411,7 @@ three.on( "update", function(e) {
     // infoText += toFixed(mapCartographicDeg[1], 6) + ", " + toFixed(mapCartographicDeg[2], 2) + ")\n";
     // infoText += "distance to GT (" + toFixed(distanceToMap,2) + ")";
 
-   
+
 	// infoText += "x : " + mapGeoObject.position.x + ", ";
 	infoText += "Pan x: " + pan.x + ", ";
 	infoText += "Pan y: " + pan.y + ", ";
@@ -407,23 +427,6 @@ three.on( "update", function(e) {
       lastInfoText = infoText;
   	}
 
-	// update();
-	// Hardcoded streetcar route
-	if(streetcar.position.x < 3000 && streetcar.position.z == -300) //need more conditions
-	{
-		streetcar.translateZ(10);
-	}
-	else if (streetcar.position.z > -700 && streetcar.position.x == 3000)
-	{
-		streetcar.translateX(10); // original
-	}
-	else if (streetcar.position.z == -700 && streetcar.position.x > 0)
-	//else if (streetcar.position.x == -700 && streetcar.position.z < 0)
-	{
-		streetcar.translateZ(-10);
-		//streetcar.translateZ(10);
-	}
-
 });
 
 
@@ -433,7 +436,7 @@ function onClick(e) {
 	console.log("x: "+mouse.x+" y: "+mouse.y);
 	raycaster.setFromCamera(mouse, three.camera);
     var intersects = raycaster.intersectObjects(mapGeoObject.children, true);
-    
+
     if ((intersects.length > 0) && !isScaled) {
         preObj = intersects;
         isScaled = true;
