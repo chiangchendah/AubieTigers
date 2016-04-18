@@ -7,6 +7,7 @@ var context = Argon.immersiveContext;
 var options = THREE.Bootstrap.createArgonOptions( context );
 options.renderer = { klass: THREE.WebGLRenderer };
 var three = THREE.Bootstrap( options );
+var eyeOrigin = three.argon.objectFromEntity(Argon.immersiveContext.eyeOrigin);
 
 var mapGeoObject = new THREE.Object3D();
 var map = new THREE.Object3D();
@@ -58,13 +59,49 @@ mtlLoader.load('the_slim_streetcar.mtl', function(materials) {
 /*****
 Load Map
 ******/
-var loader = new THREE.OBJLoader(manager);
-loader.load( 'src/Map/streetmap.obj', function (object) {
-	object.scale.set(100, 100, 100);
-	object.rotation.x = 3*Math.PI/2;
-	console.log("Map position: " + object.position.y);
-	map.add(object);
-}, onProgress, onError);
+var loader = new THREE.MTLLoader();
+loader.setBaseUrl('src/Map/');
+loader.setPath('src/Map/');
+loader.load('streetmap_bldgs_and_route.mtl', function (materials) {
+	console.log("Loaded MTL");
+	materials.preload();
+	var objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials(materials);
+	objLoader.load( 'src/Map/streetmap_bldgs_and_route.obj', function (object) {
+		console.log("Loaded OBJ");
+
+		object.scale.set(100, 100, 100);
+		object.rotation.x = 3 * Math.PI/2;
+
+		map.add(object);
+	}, onProgress, onError );
+});
+
+// var loader = new THREE.OBJLoader(manager);
+// loader.load( 'src/Map/streetmap.obj', function (object) {
+// 	console.log("Map Loaded");
+// 	object.scale.set(100, 100, 100);
+// 	object.rotation.x = 3*Math.PI/2;
+// 	map.add(object);
+// }, onProgress, onError);
+
+/*********
+Load Import Buildings on Map
+**********/
+var imploader = new THREE.MTLLoader();
+imploader.setBaseUrl('src/Map/');
+imploader.setPath('src/Map/');
+imploader.load('streetmap_impt_bldgs.mtl', function (materials) {
+	materials.preload();
+	var objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials(materials);
+	objLoader.load( 'src/Map/streetmap_impt_bldgs.obj', function (object) {
+		object.scale.set(100, 100, 100);
+		object.rotation.x = 3 * Math.PI/2;
+
+		map.add(object);
+	}, onProgress, onError );
+});
 
 /*****
 Load Map base
@@ -72,17 +109,18 @@ Load Map base
 var basemtlLoader = new THREE.MTLLoader();
 basemtlLoader.setBaseUrl('src/Map/');
 basemtlLoader.setPath('src/Map/');
-basemtlLoader.load('aqua_auburn.mtl', function (materials) {
+basemtlLoader.load('streetmap_base.mtl', function (materials) {
 	materials.preload();
 	var objLoader = new THREE.OBJLoader();
 	objLoader.setMaterials(materials);
-	objLoader.load( 'src/Map/aqua_auburn.obj', function (object) {
+	objLoader.load( 'src/Map/streetmap_base.obj', function (object) {
 		object.scale.set(100, 100, 100);
 		object.rotation.x = 3 * Math.PI/2;
 
 		map.add(object);
 	}, onProgress, onError );
 });
+
 
 /********
 Create the curved track for the streetcar and enable animation.
@@ -163,13 +201,13 @@ function moveStreetcar() {
 	}
 }
 
-function animate() {
-	requestAnimationFrame(animate);
-	three.renderer.render(three.scene, three.camera );
-}
-
-animate();
-setInterval(moveStreetcar, 100);
+// function animate() {
+// 	requestAnimationFrame(animate);
+// 	three.renderer.render(three.scene, three.camera );
+// }
+//
+// animate();
+// setInterval(moveStreetcar, 100);
 
 /* Add light */
 var ambient = new THREE.AmbientLight( 0x404040 );
@@ -177,6 +215,34 @@ three.scene.add( ambient );
 // var directionalLight = new THREE.DirectionalLight( 0xffeedd, 0.2 );
 // directionalLight.position.set( 0, 0, 1 ).normalize();
 // three.scene.add( directionalLight );
+
+//var buzz = new THREE.Object3D();
+var geometry = new THREE.BoxGeometry(20, 20, 20);
+var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+var buzz = new THREE.Mesh(geometry, material);
+//buzz.position.y = 0;
+buzz.scale.set(20, 20, 20);
+three.scene.add(buzz);
+/*var buzzloader = new THREE.TextureLoader();
+buzzloader.load( 'src/left_arrow.png', function ( texture ) {
+	var geometry = new THREE.BoxGeometry(20, 20, 20);
+	var material = new THREE.MeshBasicMaterial( { map: texture } );
+	var mesh = new THREE.Mesh( geometry, material );
+	mesh.scale.set(20,20,20);
+	buzz.add( mesh );
+	buzz.position.y = 500; //negative is backwards, positive is forward
+
+});
+*/
+// var gatechGeo = new Argon.Cesium.Entity({
+// 	name: "Georgia Tech",
+// 	position: Argon.Cesium.Cartesian3.fromDegrees(-84.39, 33.777222)
+// });
+//
+// var gatechGeoTarget = three.argon.objectFromEntity(gatechGeo);
+// gatechGeoTarget.add(buzz);
+// three.scene.add(gatechGeoTarget);
+
 
 // Setup scene
 map.rotation.x = - Math.PI / 2;
@@ -373,7 +439,7 @@ three.on("argon:realityChange", function(e) {
 	var cameraPosition = three.camera.getWorldPosition();
 
 	cameraPosition.x += -800; // x is moving horizontally outward
-	cameraPosition.y += 4000;
+	cameraPosition.y += 2000;
 	cameraPosition.z += -400;
 	mapGeoObject.position.copy(cameraPosition);
 	eyeDir = mapGeoObject.position.sub(three.camera.position);
@@ -448,7 +514,7 @@ function onClick(e) {
             // obj.scale.y = 0.5;
             // obj.scale.z = 0.5;
             if (directionsService) {
-            	calculateAndDisplayRoute(directionsService);            	
+            	calculateAndDisplayRoute(directionsService);
             } else {
             	console.log("Not initiated");
             }
