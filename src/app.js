@@ -40,16 +40,17 @@ Load Streetcar with Material
 var mtlLoader = new THREE.MTLLoader();
 mtlLoader.setBaseUrl('src/Streetcar2/');
 mtlLoader.setPath('src/Streetcar2/');
-mtlLoader.load('the_slim_streetcar.mtl', function(materials) {
+mtlLoader.load('streetcar.mtl', function(materials) {
 	materials.preload();
 	var objLoader = new THREE.OBJLoader();
 	objLoader.setMaterials(materials);
 	objLoader.setPath('src/Streetcar2/');
-	objLoader.load( 'the_slim_streetcar.obj', function (object) {
-		object.scale.set(1, 1, 1);
-		object.position.z = -300; // negative goes left, positive goes right
-		object.position.x = 200; //negative is backwards, positive is forward
-		object.rotation.y = Math.PI/2;
+	objLoader.load( 'streetcar.obj', function (object) {
+		object.scale.set(100, 100, 100);
+		//object.position.z = -300; // negative goes left, positive goes right
+		//object.position.x = 200; //negative is backwards, positive is forward
+		//object.rotation.y = Math.PI/2;
+		//object.rotation.x = Math.PI/2;
 		map.add( object );
 		streetcar = object;
 
@@ -71,7 +72,7 @@ loader.load('streetmap_bldgs_and_route.mtl', function (materials) {
 		console.log("Loaded OBJ");
 
 		object.scale.set(100, 100, 100);
-		object.rotation.x = 3 * Math.PI/2;
+		//object.rotation.x = Math.PI/2;
 
 		map.add(object);
 	}, onProgress, onError );
@@ -97,7 +98,7 @@ imploader.load('streetmap_impt_bldgs.mtl', function (materials) {
 	objLoader.setMaterials(materials);
 	objLoader.load( 'src/Map/streetmap_impt_bldgs.obj', function (object) {
 		object.scale.set(100, 100, 100);
-		object.rotation.x = 3 * Math.PI/2;
+		//object.rotation.x = Math.PI/2;
 
 		map.add(object);
 	}, onProgress, onError );
@@ -115,7 +116,7 @@ basemtlLoader.load('streetmap_base.mtl', function (materials) {
 	objLoader.setMaterials(materials);
 	objLoader.load( 'src/Map/streetmap_base.obj', function (object) {
 		object.scale.set(100, 100, 100);
-		object.rotation.x = 3 * Math.PI/2;
+		//object.rotation.x = Math.PI/2;
 
 		map.add(object);
 	}, onProgress, onError );
@@ -179,6 +180,7 @@ for( var i = 0; i < spline_points.length; i++ ) {
 
 //Create the final Object3d to add to the scene
 var spline_object = new THREE.Line(spline_geom, spline_material);
+spline_object.rotation.x = Math.PI/2;
 map.add(spline_object);
 
 /***********
@@ -210,7 +212,8 @@ function moveStreetcar() {
 // }
 //
 // animate();
-// setInterval(moveStreetcar, 100);
+
+//setInterval(moveStreetcar, 100);
 
 /***********
 * Lighting work
@@ -225,12 +228,12 @@ three.scene.add( directionalLight );
 * Sam trying to get buzzbox to be relative to world
 ************/
 //var buzz = new THREE.Object3D();
-var geometry = new THREE.BoxGeometry(20, 20, 20);
-var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-var buzz = new THREE.Mesh(geometry, material);
-//buzz.position.y = 0;
-buzz.scale.set(20, 20, 20);
-three.scene.add(buzz);
+// var geometry = new THREE.BoxGeometry(20, 20, 20);
+// var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+// var buzz = new THREE.Mesh(geometry, material);
+// //buzz.position.y = 0;
+// buzz.scale.set(20, 20, 20);
+// three.scene.add(buzz);
 /*var buzzloader = new THREE.TextureLoader();
 buzzloader.load( 'src/left_arrow.png', function ( texture ) {
 	var geometry = new THREE.BoxGeometry(20, 20, 20);
@@ -256,7 +259,7 @@ buzzloader.load( 'src/left_arrow.png', function ( texture ) {
 * For Argon rendering
 ************/
 // Setup scene
-map.rotation.x = - Math.PI / 2;
+//map.rotation.x = Math.PI / 2;
 mapGeoObject.add(map);
 three.scene.add(mapGeoObject);
 
