@@ -86,7 +86,7 @@ loader.load('streetmap_bldgs_and_route.mtl', function (materials) {
 // }, onProgress, onError);
 
 /*********
-Load Import Buildings on Map
+Load Important Buildings on Map
 **********/
 var imploader = new THREE.MTLLoader();
 imploader.setBaseUrl('src/Map/');
@@ -181,6 +181,9 @@ for( var i = 0; i < spline_points.length; i++ ) {
 var spline_object = new THREE.Line(spline_geom, spline_material);
 map.add(spline_object);
 
+/***********
+* For Streetcar animation
+************/
 /* The following four variables are used in the moveStreetcar function */
 var counter = 0;
 var tangent = new THREE.Vector3();
@@ -209,13 +212,18 @@ function moveStreetcar() {
 // animate();
 // setInterval(moveStreetcar, 100);
 
-/* Add light */
+/***********
+* Lighting work
+************/
 var ambient = new THREE.AmbientLight( 0x404040 );
 three.scene.add( ambient );
-// var directionalLight = new THREE.DirectionalLight( 0xffeedd, 0.2 );
-// directionalLight.position.set( 0, 0, 1 ).normalize();
-// three.scene.add( directionalLight );
+var directionalLight = new THREE.DirectionalLight( 0xffeedd, 0.2 );
+directionalLight.position.set( 0, 0, 1 ).normalize();
+three.scene.add( directionalLight );
 
+/***********
+* Sam trying to get buzzbox to be relative to world
+************/
 //var buzz = new THREE.Object3D();
 var geometry = new THREE.BoxGeometry(20, 20, 20);
 var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
@@ -244,6 +252,9 @@ buzzloader.load( 'src/left_arrow.png', function ( texture ) {
 // three.scene.add(gatechGeoTarget);
 
 
+/***********
+* For Argon rendering
+************/
 // Setup scene
 map.rotation.x = - Math.PI / 2;
 mapGeoObject.add(map);
@@ -450,6 +461,9 @@ three.on("argon:realityChange", function(e) {
 
 var lastInfoText;
 
+/***********
+* Argon's Update Loop
+************/
 three.on( "update", function(e) {
 	update();
 	var elem = document.getElementById('location');
