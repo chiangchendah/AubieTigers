@@ -45,12 +45,8 @@ mtlLoader.load('streetcar.mtl', function(materials) {
 	var objLoader = new THREE.OBJLoader();
 	objLoader.setMaterials(materials);
 	objLoader.setPath('src/Streetcar2/');
-	objLoader.load( 'streetcar_adjusted.obj', function (object) {
+	objLoader.load( 'streetcar_y.obj', function (object) {
 		object.scale.set(100, 100, 100);
-		//object.position.z = -300; // negative goes left, positive goes right
-		//object.position.x = 200; //negative is backwards, positive is forward
-		//object.rotation.y = Math.PI/2;
-		//object.rotation.x = Math.PI/2;
 		map.add( object );
 		streetcar = object;
 
@@ -64,13 +60,10 @@ var loader = new THREE.MTLLoader();
 loader.setBaseUrl('src/Map/');
 loader.setPath('src/Map/');
 loader.load('streetmap_bldgs_and_route.mtl', function (materials) {
-	console.log("Loaded MTL");
 	materials.preload();
 	var objLoader = new THREE.OBJLoader();
 	objLoader.setMaterials(materials);
 	objLoader.load( 'src/Map/streetmap_bldgs_and_route.obj', function (object) {
-		console.log("Loaded OBJ");
-
 		object.scale.set(100, 100, 100);
 		//object.rotation.x = Math.PI/2;
 
@@ -81,89 +74,83 @@ loader.load('streetmap_bldgs_and_route.mtl', function (materials) {
 /*********
 Load Important Buildings on Map
 **********/
-// var imploader = new THREE.MTLLoader();
-// imploader.setBaseUrl('src/Map/');
-// imploader.setPath('src/Map/');
-// imploader.load('streetmap_impt_bldgs.mtl', function (materials) {
-// 	materials.preload();
-// 	var objLoader = new THREE.OBJLoader();
-// 	objLoader.setMaterials(materials);
-// 	objLoader.load( 'src/Map/streetmap_impt_bldgs.obj', function (object) {
-// 		object.scale.set(100, 100, 100);
-// 		//object.rotation.x = Math.PI/2;
-//
-// 		map.add(object);
-// 	}, onProgress, onError );
-// });
+var imploader = new THREE.MTLLoader();
+imploader.setBaseUrl('src/Map/');
+imploader.setPath('src/Map/');
+imploader.load('streetmap_impt_bldgs.mtl', function (materials) {
+	materials.preload();
+	var objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials(materials);
+	objLoader.load( 'src/Map/streetmap_impt_bldgs.obj', function (object) {
+		object.scale.set(100, 100, 100);
+		map.add(object);
+	}, onProgress, onError );
+});
 
 /*****
 Load Map base
-******/
-// var basemtlLoader = new THREE.MTLLoader();
-// basemtlLoader.setBaseUrl('src/Map/');
-// basemtlLoader.setPath('src/Map/');
-// basemtlLoader.load('streetmap_base.mtl', function (materials) {
-// 	materials.preload();
-// 	var objLoader = new THREE.OBJLoader();
-// 	objLoader.setMaterials(materials);
-// 	objLoader.load( 'src/Map/streetmap_base.obj', function (object) {
-// 		object.scale.set(100, 100, 100);
-// 		//object.rotation.x = Math.PI/2;
-//
-// 		map.add(object);
-// 	}, onProgress, onError );
-// });
-
+// ******/
+var basemtlLoader = new THREE.MTLLoader();
+basemtlLoader.setBaseUrl('src/Map/');
+basemtlLoader.setPath('src/Map/');
+basemtlLoader.load('streetmap_base.mtl', function (materials) {
+	materials.preload();
+	var objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials(materials);
+	objLoader.load( 'src/Map/streetmap_base.obj', function (object) {
+		object.scale.set(100, 100, 100);
+		map.add(object);
+	}, onProgress, onError );
+});
 
 /********
 Create the curved track for the streetcar and enable animation.
 *********/
 // x becomes y, z becomes -x, y becomes -z
 var spline_curve = new THREE.SplineCurve3( [
-	new THREE.Vector3( -160, 980,  0),
-	new THREE.Vector3( 30, 1450,   0),
-	new THREE.Vector3( 30, 1680,  0),
-	new THREE.Vector3( -20, 1750,  0),
-	new THREE.Vector3( -180, 1750,    0),
-	new THREE.Vector3( -200, 1750,  0),
-	new THREE.Vector3(-460, 2150,  0),
-	new THREE.Vector3( -530, 2210,  0),
-	new THREE.Vector3( -920, 2220,  0),
-	new THREE.Vector3( -980, 2170,  0),
-	new THREE.Vector3( -980, 2000,  0),
-	new THREE.Vector3( -960, 1960,  0),
-	new THREE.Vector3( -860, 1930,  0),
-	new THREE.Vector3( -770, 1850,  0),
-	new THREE.Vector3( -610, 1600,   0),
-	new THREE.Vector3( -300, 1120,   0),
-	new THREE.Vector3( -195, 950,  0),
-	new THREE.Vector3( -100, 800,  0),
-	new THREE.Vector3( -70, 700,  0),
-	new THREE.Vector3( -165, 390,  0),
-	new THREE.Vector3( -100, 290,   0),
-	new THREE.Vector3( 550, 290,   0),
-	new THREE.Vector3( 700, 285,  0),
-	new THREE.Vector3( 1495, 280,  0),
-	new THREE.Vector3( 1650, 270,  0),
-	new THREE.Vector3( 2800, 260,  0),
-	new THREE.Vector3( 3050, 250,  0),
-	new THREE.Vector3( 3100, 320,  0),
-	new THREE.Vector3( 3100, 600,  0),
-	new THREE.Vector3( 3050, 670,   0),
-	new THREE.Vector3( 3000, 670,  0),
-	new THREE.Vector3( 2500, 680,  0),
-	new THREE.Vector3( 2000, 680,  0),
-	new THREE.Vector3( 1500, 690,  0),
-	new THREE.Vector3( 90, 705,  0),
-	new THREE.Vector3( -120, 900,  0),
-	new THREE.Vector3( -150, 930,  0),
-	new THREE.Vector3(-160,  960,  0),
-	new THREE.Vector3( -160, 990,  0),
-] );
+	new THREE.Vector3(-160, 980, 0),
+	new THREE.Vector3(30, 1450, 0),
+	new THREE.Vector3(30, 1680, 0),
+	new THREE.Vector3(-20, 1750, 0),
+	new THREE.Vector3(-180, 1750, 0),
+	new THREE.Vector3(-200, 1750, 0),
+	new THREE.Vector3(-460, 2150, 0),
+	new THREE.Vector3(-530, 2210, 0),
+	new THREE.Vector3(-920, 2220, 0),
+	new THREE.Vector3(-980, 2170, 0),
+	new THREE.Vector3(-980, 2000, 0),
+	new THREE.Vector3(-960, 1960, 0),
+	new THREE.Vector3(-860, 1930, 0),
+	new THREE.Vector3(-770, 1850, 0),
+	new THREE.Vector3(-610, 1600, 0),
+	new THREE.Vector3(-300, 1120, 0),
+	new THREE.Vector3(-195, 950, 0),
+	new THREE.Vector3(-100, 800, 0),
+	new THREE.Vector3(-70, 700, 0),
+	new THREE.Vector3(-165, 390, 0),
+	new THREE.Vector3(-100, 290, 0),
+	new THREE.Vector3(550, 290, 0),
+	new THREE.Vector3(700, 285, 0),
+	new THREE.Vector3(1495, 280, 0),
+	new THREE.Vector3(1650, 270, 0),
+	new THREE.Vector3(2800, 260, 0),
+	new THREE.Vector3(3050, 250, 0),
+	new THREE.Vector3(3100, 320, 0),
+	new THREE.Vector3(3100, 600, 0),
+	new THREE.Vector3(3050, 670, 0),
+	new THREE.Vector3(3000, 670, 0),
+	new THREE.Vector3(2500, 680, 0),
+	new THREE.Vector3(2000, 680, 0),
+	new THREE.Vector3(1500, 690, 0),
+	new THREE.Vector3(90, 705, 0),
+	new THREE.Vector3(-120, 900, 0),
+	new THREE.Vector3(-150, 930, 0),
+	new THREE.Vector3(-160, 960, 0),
+	new THREE.Vector3(-160, 990, 0)]);
 
 var spline_geom = new THREE.Geometry();
-var spline_points = spline_curve.getPoints(1000); //get X points on the spline
-var spline_material = new THREE.LineBasicMaterial({ opacity: 1, transparent: false});
+var spline_points = spline_curve.getPoints(1000); //get 1000 points on the spline
+var spline_material = new THREE.LineBasicMaterial({ opacity: 0, transparent: true});
 
 for( var i = 0; i < spline_points.length; i++ ) {
 	spline_geom.vertices.push(spline_points[i]);
@@ -181,17 +168,16 @@ map.add(spline_object);
 var counter = 0;
 var tangent = new THREE.Vector3();
 var axis = new THREE.Vector3();
-var up = new THREE.Vector3(0, 1, 0); //NEEDS TO BE SOLVED
+var up = new THREE.Vector3(0, 1, 0);
 
 //Functions to animate the streetcar along the spline
 function moveStreetcar() {
 	if ( counter <= 1 ) {
 		streetcar.position.copy(spline_curve.getPointAt(counter));
-        tangent = spline_curve.getTangentAt(counter).normalize();
-        axis.crossVectors(up, tangent).normalize();
-
-        var radians = Math.acos(up.dot(tangent));
-        streetcar.quaternion.setFromAxisAngle(axis, radians);
+		tangent = spline_curve.getTangentAt(counter).normalize();
+		axis.crossVectors(up, tangent).normalize();
+		var radians = Math.acos(up.dot(tangent));
+		streetcar.quaternion.setFromAxisAngle(axis, radians);
         counter += 0.002;
 	}
 	else {
@@ -199,14 +185,13 @@ function moveStreetcar() {
 	}
 }
 
-// function animate() {
-// 	requestAnimationFrame(animate);
-// 	three.renderer.render(three.scene, three.camera );
-// }
-//
-// animate();
+function animate() {
+	requestAnimationFrame(animate);
+	three.renderer.render(three.scene, three.camera );
+}
 
-//setInterval(moveStreetcar, 100);
+animate();
+setInterval(moveStreetcar, 100);
 
 /***********
 * Lighting work
@@ -252,7 +237,7 @@ buzzloader.load( 'src/left_arrow.png', function ( texture ) {
 * For Argon rendering
 ************/
 // Setup scene
-//map.rotation.x = Math.PI / 2;
+//map.rotation.x = -Math.PI;
 mapGeoObject.add(map);
 three.scene.add(mapGeoObject);
 
@@ -309,7 +294,7 @@ var infoText = "Welcome to Auburn Avenue";
 /************************
 * Helpers Functions
 ************************/
-// Normalize touch (x,y) to the screen size
+//Normalize touch (x,y) to the screen size
 function getMouseOnScreen(pageX, pageY) {
 	var vector = new THREE.Vector2();
 	vector.set(
@@ -467,7 +452,8 @@ three.on("argon:realityChange", function(e) {
 
 	cameraPosition.x += -800; // x is moving horizontally outward
 	cameraPosition.y += 4000;
-	cameraPosition.z += -400;
+	cameraPosition.z += 400;
+
 	mapGeoObject.position.copy(cameraPosition);
 	eyeDir = mapGeoObject.position.sub(three.camera.position);
 	three.argon.updateEntityFromObject(mapGeoObject);
