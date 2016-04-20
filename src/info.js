@@ -11,12 +11,15 @@ var eyeOrigin = three.argon.objectFromEntity(Argon.immersiveContext.eyeOrigin)
 
 // This table gives information to be displayed and also the position and rotation vectors
 var table = [
-    [ "N", "North", "(Negative Z)", 0, 0, -600, 0, 0, 0],
-    [ "S", "South", "(Positive Z)", 0, 0, 600, 0, Math.PI, 0  ],
-    [ "E", "East", "(Positive X)", 600, 0, 0, 0, -Math.PI/2, 0 ],
-    [ "W", "West", "(Negative X)", -600, 0, 0, 0, Math.PI/2, 0 ],
-    [ "U", "Up", "(Positive Y)", 0, 600, 0, Math.PI/2, 0, 0 ],
-    [ "D", "Down", "(Negative Y)", 0, -600, 0, Math.PI/2,  Math.PI, Math.PI]
+    [ "p1.jpg" ],
+    [ "p2.jpg" ],
+    [ "p3.jpg" ],
+    [ "p4.jpg" ],
+    [ "p5.jpg" ],
+    [ "p6.jpg" ],
+    [ "p7.jpg" ],
+    [ "p8.jpg" ],
+    [ "p9.jpg" ]
   ];
 
   var objects = []
@@ -28,47 +31,44 @@ var table = [
     var item = table[ i ];
 
     var element = document.createElement( 'div' );
-    element.className = 'element';
-    element.style.backgroundColor = 'rgba(200,120,200,1)';
-
-    var symbol = document.createElement( 'div' );
-    symbol.className = 'symbol';
-    symbol.textContent = item[ 0 ];
-    element.appendChild( symbol );
-
-    var details = document.createElement( 'div' );
-    details.className = 'details';
-    details.innerHTML = item[ 1 ] + '<br>' + item[ 2 ];
-    element.appendChild( details );
+    console.log(item[0]);
+    element.className = 'picture';
+    element.innerHTML = '<img src="src/images/b7/' + item[0] + '">';
 
     var object = new THREE.CSS3DObject( element );
-		object.matrixAutoUpdate = false;
+	object.matrixAutoUpdate = false;
     objects.push( object );
 
     // Add each object our root node
     root.add(object);
   }
 
+ 	var desc = new THREE.CSS3DObject(document.getElementById("description"));
+	objects.push(desc);
+	root.add(desc);
+
+
 	// Add the root node to our eyeOrigin
 	eyeOrigin.add(root)
 
 	// Now we just have to position the six elements at the compass points
-	
-  for ( var i = 0; i < objects.length; i ++ ) {
+var vector = new THREE.Vector3(0, 0, 0);
+for ( var i = 0; i < objects.length; i ++ ) {
 
-    var item = table[ i ];
+	var item = objects[ i ];
+	var target = new THREE.Object3D();
+	var phi = Math.acos( -1 + ( 2 * i ) / objects.length );
+    var theta = Math.sqrt( objects.length * Math.PI ) * phi;
     var target = new THREE.Object3D();
-    // three position values
-    target.position.x = item[ 3 ];
-    target.position.y = item[ 4 ];
-    target.position.z = item[ 5 ];
-    //the three axes of rotation
- 	  target.rotation.x = item[ 6 ];     
-	  target.rotation.y = item[ 7 ];  
-	  target.rotation.z = item[ 8 ];  
-    
-	object = objects[ i ];
-    object.position.copy(target.position)
-    object.rotation.copy(target.rotation)
-	object.updateMatrix()	
-  }
+
+    target.position.x = 800 * Math.cos( theta ) * Math.sin( phi );
+    target.position.y = 800 * Math.sin( theta ) * Math.sin( phi );
+    target.position.z = 800 * Math.cos( phi );
+
+    target.lookAt( vector );
+
+    item.position.copy(target.position);
+	item.rotation.copy(target.rotation);
+	item.updateMatrix();
+
+}
