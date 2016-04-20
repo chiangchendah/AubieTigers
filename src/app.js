@@ -358,7 +358,7 @@ function panCamera() {
 	}
 }
 // function to update
-function update(state) {
+function update() {
 	// eyeDir = map.position.sub(three.camera.position);
 
 	if ( ! noZoom ) {
@@ -368,28 +368,6 @@ function update(state) {
 	if ( ! noPan ) {
 		panCamera();
 	}
-
-	var elem = document.getElementById('location');
-	
-	if (!realityInit) {
-		elem.innerText = "No Reality Yet";
-		return;
-	}
-
-	var cameraPos = three.camera.getWorldPosition();
-	var mapPos = map.getWorldPosition();
-	var distanceToMap = cameraPos.distanceTo(mapPos);
-
-	// var infoText = "Geospatial Argon example:\n";
-
-	// infoText += "Pan x: " + pan.x + ", ";
-	// infoText += "Pan y: " + pan.y + ", ";
-	// infoText += "Pan z: " + pan.z + ", ";
-	
-    if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
-      elem.innerText = infoText;
-      lastInfoText = infoText;
-  	}
 }
 
 function handleStart(e) {
@@ -467,8 +445,28 @@ var lastInfoText;
 * Argon's Update Loop
 ************/
 three.on( "update", function(e) {
-	var state = e.argonState;
-	update(state);
+	update();
+	var elem = document.getElementById('location');
+	
+	if (!realityInit) {
+		elem.innerText = "No Reality Yet";
+		return;
+	}
+
+	var cameraPos = three.camera.getWorldPosition();
+	var mapPos = map.getWorldPosition();
+	var distanceToMap = cameraPos.distanceTo(mapPos);
+
+	// var infoText = "Geospatial Argon example:\n";
+
+	// infoText += "Pan x: " + pan.x + ", ";
+	// infoText += "Pan y: " + pan.y + ", ";
+	// infoText += "Pan z: " + pan.z + ", ";
+	elem.innerText = infoText;
+    if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
+      elem.innerText = infoText;
+      lastInfoText = infoText;
+  	}
 });
 
 function onClick(e) {
@@ -478,8 +476,8 @@ function onClick(e) {
 	raycaster.setFromCamera(mouse, three.camera);
     var intersects = raycaster.intersectObjects(mapGeoObject.children, true);
     console.log(intersects);
-
-    if ((intersects.length > 0) && !isScaled) {
+    infoText = "Odd Fellows Building and Auditorium";
+    if (intersects.length > 0) {
 
         preObj = intersects;
         isScaled = true;
@@ -492,15 +490,7 @@ function onClick(e) {
             }
         }
 
-    } else if (isScaled) {
-        isScaled = false;
-        for (var i = 0; i < preObj.length; i++) {
-            var obj = preObj[i].object;
-            obj.scale.x = 1;
-            obj.scale.y = 1;
-            obj.scale.z = 1;
-        }
-    }
+    } 
 }
 
 var tenthandhome = "251 10th St NW, Atlanta, GA 30318";
