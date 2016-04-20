@@ -308,6 +308,7 @@ var preObj = null;
 var mouse = new THREE.Vector2();
 var preMouse = new THREE.Vector2();
 var isScaled = false;
+var infoText = "Welcome to Auburn Avenue";
 
 /************************
 * Helpers Functions
@@ -375,10 +376,8 @@ function panCamera() {
 
 	}
 }
-
 // function to update
-function update() {
-
+function update(state) {
 	// eyeDir = map.position.sub(three.camera.position);
 
 	if ( ! noZoom ) {
@@ -389,6 +388,27 @@ function update() {
 		panCamera();
 	}
 
+	var elem = document.getElementById('location');
+	
+	if (!realityInit) {
+		elem.innerText = "No Reality Yet";
+		return;
+	}
+
+	var cameraPos = three.camera.getWorldPosition();
+	var mapPos = map.getWorldPosition();
+	var distanceToMap = cameraPos.distanceTo(mapPos);
+
+	// var infoText = "Geospatial Argon example:\n";
+
+	// infoText += "Pan x: " + pan.x + ", ";
+	// infoText += "Pan y: " + pan.y + ", ";
+	// infoText += "Pan z: " + pan.z + ", ";
+	
+    if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
+      elem.innerText = infoText;
+      lastInfoText = infoText;
+  	}
 }
 
 function handleStart(e) {
@@ -465,50 +485,9 @@ var lastInfoText;
 * Argon's Update Loop
 ************/
 three.on( "update", function(e) {
-	update();
-	var elem = document.getElementById('location');
 	var state = e.argonState;
-
-	if (!realityInit) {
-		elem.innerText = "No Reality Yet";
-		return;
-	}
-
-	var gpsCartographicDeg = [0,0,0];
-	if(state.position.cartographicDegrees) {
-		gpsCartographicDeg = state.position.cartographicDegrees;
-	}
-
-	var cameraPos = three.camera.getWorldPosition();
-	var mapPos = map.getWorldPosition();
-	var distanceToMap = cameraPos.distanceTo(mapPos);
-
-	var infoText = "Geospatial Argon example:\n";
-
-	// infoText += "eye (" + toFixed(gpsCartographicDeg[0],6) + ", ";
-    // infoText += toFixed(gpsCartographicDeg[1], 6) + ", " + toFixed(gpsCartographicDeg[2], 2) + ")\n";
-    // infoText += "cube(" + toFixed(mapCartographicDeg[0], 6) + ", ";
-    // infoText += toFixed(mapCartographicDeg[1], 6) + ", " + toFixed(mapCartographicDeg[2], 2) + ")\n";
-    // infoText += "distance to GT (" + toFixed(distanceToMap,2) + ")";
-
-
-	// infoText += "x : " + mapGeoObject.position.x + ", ";
-	infoText += "Pan x: " + pan.x + ", ";
-	infoText += "Pan y: " + pan.y + ", ";
-	infoText += "Pan z: " + pan.z + ", ";
-	// infoText += "y : " + mapGeoObject.position.y + ", ";
-	// infoText += "x : " + mouseChange.x + ", ";
-	// infoText += "y : " + mouseChange.y + ", ";
-	// infoText += "EyeL : " + eyeDir.length() + ", ";
-
-
-    if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
-      elem.innerText = infoText;
-      lastInfoText = infoText;
-  	}
-
+	update(state);
 });
-
 
 function onClick(e) {
 	mouse.x = ( e.clientX / window.innerWidth ) * 2 - 1;
@@ -516,21 +495,18 @@ function onClick(e) {
 	console.log("x: "+mouse.x+" y: "+mouse.y);
 	raycaster.setFromCamera(mouse, three.camera);
     var intersects = raycaster.intersectObjects(mapGeoObject.children, true);
+    console.log(intersects);
 
     if ((intersects.length > 0) && !isScaled) {
+
         preObj = intersects;
         isScaled = true;
         for (var i = 0; i < intersects.length; i++ ) {
             var obj = intersects[i].object;
             console.log("Object"+ i+":"+obj.name);
-
-            // obj.scale.x = 0.5;
-            // obj.scale.y = 0.5;
-            // obj.scale.z = 0.5;
-            if (directionsService) {
-            	calculateAndDisplayRoute(directionsService);
-            } else {
-            	console.log("Not initiated");
+            var building_name = obj.name;
+            if (building_name.includes('b_')) {
+            	infoText = "Odd Fellows Building and Auditorium";
             }
         }
 

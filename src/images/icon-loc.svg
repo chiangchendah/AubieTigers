@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="18px" height="22px" viewBox="0 0 18 22" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.7.1 (28215) - http://www.bohemiancoding.com/sketch -->
+    <title>locate-favorite</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="iPhone-6" transform="translate(-87.000000, -162.000000)">
+            <g id="Group-7" transform="translate(76.000000, 157.000000)">
+                <g id="Group-6" transform="translate(12.000000, 6.000000)">
+                    <g id="locate-favorite">
+                        <path d="M16,7.90697674 C16,13.9534884 8,20 8,20 C8,20 0,13.9825581 0,7.90697674 C0,3.54007409 3.58172202,0 8,0 C12.418278,0 16,3.54007409 16,7.90697674 L16,7.90697674 Z" id="Shape" stroke="#FFCC44" stroke-width="0.941176471"></path>
+                        <polygon id="Shape" fill="#FFCC44" points="8 3.3300546 9.04591727 6.51162791 12.4305779 6.51162791 9.69233078 8.46420112 10.738248 11.6389013 8 9.66914419 5.26175195 11.6337461 6.30766922 8.46506074 3.56942165 6.51162791 6.95408273 6.51162791"></polygon>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

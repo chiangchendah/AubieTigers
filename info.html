@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auburn Avenue Info</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    body {
+  font-family: Arial;
+}
+
+a {
+  color: #ffffff;
+}
+
+#menu {
+  position: absolute;
+  bottom: 50px;
+  width: 100%;
+  text-align: center;
+}
+
+button {
+  color: rgba(127,255,255,0.75);
+  background: transparent;
+  outline: 1px solid rgba(127,255,255,0.75);
+  border: 0px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: rgba(0,255,255,0.5);
+}
+button:active {
+  color: #000000;
+  background-color: rgba(0,255,255,0.75);
+}
+  </style>
+  <script src="./src/vendor/three.min.js"></script>
+   <script src="./src/vendor/threestrap.js"></script>
+   <script src="./src/vendor/argon.js"></script>
+   <script src="./src/vendor/argon-three.js"></script>
+   <script src="./src/OBJLoader.js"></script>
+   <script src="./src/MTLLoader.js"></script>
+   <link rel="stylesheet" type="text/css" href="src/style.css">
+   <link href='https://fonts.googleapis.com/css?family=Roboto:400,900' rel='stylesheet' type='text/css'>
+ <!--  <link rel="stylesheet" href="OSMBuildings/dist/OSMBuildings/OSMBuildings.css">
+  <script src="OSMBuildings/dist/OSMBuildings/OSMBuildings.debug.js"></script> -->
+</head>
+
+<body style="background-color:rgba(255,255,255,0.7)">
+  <div id="argon-immersive-context">
+	 	<div class="container">
+      <header class="header">
+        <h1>Odd Fellows Building and Auditorium</h1>
+      </header>
+      <div class="address-tag">
+         
+        <p><img src="src/images/icon-loc.svg"> 228-250 Auburn Avenue</p>
+      </div>
+      <div class="description">
+        <p>The Odd Fellows Auditorium in the Annex became a center for entertainment as soon as it opened. The Royal Theatre was located in the Annex and was the only movie house in Atlanta where Blacks could be seated on the main floor. The roof garden created a space to dine and dance in an elegant atmosphere.</p>
+      </div>
+			<div class="info lower">
+				<a class="btn-direction" href="navi.html">
+          GET DIRECTION
+        </a>
+        <a class="btn-back" href="index.html"> 
+          
+          <p><img src="src/images/arrow-back.svg">BACK TO MAP</p>
+        </a>
+			</div>
+	 	</div>
+
+  </div>
+    <h2>Six directions example</h2>
+    <p>This example displays the reference frame around the camera in Cartesian coordinates (x, y, x). It puts a image in the negative and positive directions: x is left/right; y is up/down; z is back front. A div is created in each of these directions and converted to cssObject (in three.js) at  200 units from the origin. These cssObjects are then added to the eyeOrigin. The eyeOrigin is the position of the camera: the cssObjects will always appear in the same locations relative to the camera. </p>  
+  </body>
+  <script type="text/javascript" src="src/info.js"></script>
+ <!--  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBgg97XpnFItbGWZ2CFMlzXyIr08N6eS0M&callback=initMap">
+    </script> -->
+</html>
