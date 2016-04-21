@@ -86,8 +86,6 @@ loader.load('streetmap_bldgs_and_route.mtl', function (materials) {
 	objLoader.setMaterials(materials);
 	objLoader.load( 'src/Map/streetmap_bldgs_and_route.obj', function (object) {
 		object.scale.set(100, 100, 100);
-		//object.rotation.x = Math.PI/2;
-
 		map.add(object);
 	}, onProgress, onError );
 });
@@ -305,7 +303,6 @@ function zoomCamera() {
 		factor = 1.0 + (zoomEnd.y - zoomStart.y) * zoomSpeed;
 
 		if ( factor !== 1.0 && factor > 0.0 ) {
-			// eye.multiplyScalar( factor );
 			map.scale.x *=factor;
 			map.scale.y *= factor;
 			map.scale.z *= factor;
