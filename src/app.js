@@ -1,6 +1,27 @@
-// /*
-//  * AR Map
-//  **/
+/**
+
+The Aubie Tigers
+
+Group Members:
+
+Samuel Cheng (samlcheng@gatech.edu)
+Chen Dah Chiang (David) (chiang.c@gatech.edu)
+Yiming Pu (Amy) (amyyimingpu@gatech.edu)
+Xiaoxuan Wang (Cheryl) (wangxx@gatech.edu)
+
+Project Idea:
+
+AR Map
+
+The AR map is an interactive map that will be given to Auburn Avenue visitors. It functions as an ordinary map but when viewed via the Argon browser, it reveals an AR version of the Atlanta Streetcar as it travels its route. As it travels around the points, the user will be able to tap on various pop-up information displays and learn about the history of sites at that location.
+
+Edit:
+
+We are trying to support tourists in the Auburn Avenue area who are interested in learning more about points of interest. When the user has the phone tilted downwards, they see a virtual map with 3D buildings and places of interest. When they rotate the phone up, it becomes a camera which will display either navigation related information or just a regular camera.
+
+The map is always visible when the user points the camera downward. It functions kind of like page mode for Argon.
+
+**/
 
 // Argon Initialization
 var context = Argon.immersiveContext;
@@ -71,9 +92,9 @@ loader.load('streetmap_bldgs_and_route.mtl', function (materials) {
 	}, onProgress, onError );
 });
 
-/*********
+/*****
 Load Important Buildings on Map
-**********/
+******/
 var imploader = new THREE.MTLLoader();
 imploader.setBaseUrl('src/Map/');
 imploader.setPath('src/Map/');
@@ -89,7 +110,7 @@ imploader.load('streetmap_impt_bldgs.mtl', function (materials) {
 
 /*****
 Load Map base
-// ******/
+******/
 var basemtlLoader = new THREE.MTLLoader();
 basemtlLoader.setBaseUrl('src/Map/');
 basemtlLoader.setPath('src/Map/');
@@ -103,9 +124,9 @@ basemtlLoader.load('streetmap_base.mtl', function (materials) {
 	}, onProgress, onError );
 });
 
-/********
+/*****
 Create the curved track for the streetcar and enable animation.
-*********/
+******/
 // x becomes y, z becomes -x, y becomes -z
 var spline_curve = new THREE.SplineCurve3( [
 	new THREE.Vector3(-160, 980, 0),
@@ -156,21 +177,20 @@ for( var i = 0; i < spline_points.length; i++ ) {
 	spline_geom.vertices.push(spline_points[i]);
 }
 
-//Create the final Object3d to add to the scene
+// Create the final Object3d to add to the scene
 var spline_object = new THREE.Line(spline_geom, spline_material);
-//spline_object.rotation.x = Math.PI/2;
 map.add(spline_object);
 
-/***********
-* For Streetcar animation
-************/
-/* The following four variables are used in the moveStreetcar function */
+/*****
+Streetcar Animation
+******/
+// The following four variables are used in the moveStreetcar function
 var counter = 0;
 var tangent = new THREE.Vector3();
 var axis = new THREE.Vector3();
 var up = new THREE.Vector3(0, 1, 0);
 
-//Functions to animate the streetcar along the spline
+// Functions to animate the streetcar along the spline
 function moveStreetcar() {
 	if ( counter <= 1 ) {
 		streetcar.position.copy(spline_curve.getPointAt(counter));
@@ -193,51 +213,19 @@ function animate() {
 animate();
 setInterval(moveStreetcar, 100);
 
-/***********
-* Lighting work
-************/
+/*****
+Lighting Work
+******/
 var ambient = new THREE.AmbientLight( 0x404040 );
 three.scene.add( ambient );
 var directionalLight = new THREE.DirectionalLight( 0xffeedd, 0.2 );
 directionalLight.position.set( 0, 0, 1 ).normalize();
 three.scene.add( directionalLight );
 
-/***********
-* Sam trying to get buzzbox to be relative to world
-************/
-//var buzz = new THREE.Object3D();
-// var geometry = new THREE.BoxGeometry(20, 20, 20);
-// var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-// var buzz = new THREE.Mesh(geometry, material);
-// //buzz.position.y = 0;
-// buzz.scale.set(20, 20, 20);
-// three.scene.add(buzz);
-/*var buzzloader = new THREE.TextureLoader();
-buzzloader.load( 'src/left_arrow.png', function ( texture ) {
-	var geometry = new THREE.BoxGeometry(20, 20, 20);
-	var material = new THREE.MeshBasicMaterial( { map: texture } );
-	var mesh = new THREE.Mesh( geometry, material );
-	mesh.scale.set(20,20,20);
-	buzz.add( mesh );
-	buzz.position.y = 500; //negative is backwards, positive is forward
-
-});
-*/
-// var gatechGeo = new Argon.Cesium.Entity({
-// 	name: "Georgia Tech",
-// 	position: Argon.Cesium.Cartesian3.fromDegrees(-84.39, 33.777222)
-// });
-//
-// var gatechGeoTarget = three.argon.objectFromEntity(gatechGeo);
-// gatechGeoTarget.add(buzz);
-// three.scene.add(gatechGeoTarget);
-
-
-/***********
-* For Argon rendering
-************/
+/*****
+For Argon Rendering
+******/
 // Setup scene
-//map.rotation.x = -Math.PI;
 mapGeoObject.add(map);
 three.scene.add(mapGeoObject);
 
@@ -245,9 +233,9 @@ var mapGeoEntity = three.argon.entityFromObject(mapGeoObject);
 var realityInit = false;
 var mapCartographicDeg = [0,0,0];
 
-/* ************
-* Enable interactions with objects in Argon
-***************/
+/*****
+Enable interactions with Objects in Argon
+******/
 var canvas = document.getElementsByTagName("canvas")[0];
 
 // Variables for touch events
@@ -281,7 +269,7 @@ canvas.addEventListener("touchend", handleEnd, false);
 
 // Raycaster
 var raycaster = new THREE.Raycaster();
-// helper variables
+// Helper variables
 var objX = 0;
 var objY = 0;
 var count = 0;
@@ -291,10 +279,10 @@ var preMouse = new THREE.Vector2();
 var isScaled = false;
 var infoText = "Welcome to Auburn Avenue";
 
-/************************
-* Helpers Functions
-************************/
-//Normalize touch (x,y) to the screen size
+/*****
+Helpers Functions
+******/
+// Normalize touch (x,y) to the screen size
 function getMouseOnScreen(pageX, pageY) {
 	var vector = new THREE.Vector2();
 	vector.set(
@@ -303,7 +291,7 @@ function getMouseOnScreen(pageX, pageY) {
 	return vector;
 }
 
-// function to zoom camera
+// Function to zoom camera
 function zoomCamera() {
 	var factor;
 
@@ -313,7 +301,6 @@ function zoomCamera() {
 		map.scale.x *= factor;
 		map.scale.y *= factor;
 		map.scale.z *= factor;
-
 	} else {
 		factor = 1.0 + (zoomEnd.y - zoomStart.y) * zoomSpeed;
 
@@ -330,41 +317,32 @@ function zoomCamera() {
 		}
 	}
 }
-// function to pan camera
+
+// Function to pan camera
 var pan = new THREE.Vector3();
 var mouseChange = new THREE.Vector2();
 function panCamera() {
-	// var mouseChange = new THREE.Vector2();
 	var	objectUp = new THREE.Vector3();
-		// pan = new THREE.Vector3();
-
 	mouseChange.copy( panEnd ).sub( panStart );
 
 	if ( state === STATE.PAN ) {
 		mouseChange.multiplyScalar( eyeDir.length() * panSpeed );
-
 		pan.copy( eyeDir ).cross( three.camera.up ).setLength( mouseChange.x );
 		pan.add( objectUp.copy( three.camera.up ).setLength( mouseChange.y ) );
-
 		var rx = new THREE.Vector3(1,0,0);
 		var ry = new THREE.Vector3(0,1,0);
 		var rz = new THREE.Vector3(0,0,1);
 		pan.applyAxisAngle(rx, -Math.PI/2);
-		// pan.applyAxisAngle(ry, Math.PI);
 		map.position.add(pan);
-
 		panStart.add( mouseChange.subVectors( panEnd, panStart ).multiplyScalar( dynamicDampingFactor ) );
-
 	}
 }
-// function to update
-function update() {
-	// eyeDir = map.position.sub(three.camera.position);
 
+// Function to update
+function update() {
 	if ( ! noZoom ) {
 		zoomCamera();
 	}
-
 	if ( ! noPan ) {
 		panCamera();
 	}
@@ -385,10 +363,6 @@ function handleStart(e) {
  			var dy = e.touches[0].pageY - e.touches[1].pageY;
  			touchZoomDistanceEnd = touchZoomDistanceStart = Math.sqrt(dx * dx + dy * dy);
 
- 			// var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
- 			// var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
- 			// panStart.copy(getMouseOnScreen(x, y));
- 			// panEnd.copy(panStart);
  			break;
  	}
 }
@@ -405,9 +379,6 @@ function handleMove(e) {
  			var dy = e.touches[0].pageY - e.touches[1].pageY;
  			touchZoomDistanceEnd = Math.sqrt(dx * dx + dy * dy);
 
- 			// var x = ( e.touches[0].pageX + e.touches[1].pageX ) / 2;
- 			// var y = ( e.touches[0].pageY + e.touches[1].pageY ) / 2;
- 			// panEnd.copy(getMouseOnScreen(x, y));
  			break;
  	}
 }
@@ -441,13 +412,13 @@ three.on("argon:realityChange", function(e) {
 
 var lastInfoText;
 
-/***********
-* Argon's Update Loop
-************/
+/*****
+Argon's Update Loop
+******/
 three.on( "update", function(e) {
 	update();
 	var elem = document.getElementById('location');
-	
+
 	if (!realityInit) {
 		elem.innerText = "No Reality Yet";
 		return;
@@ -457,11 +428,6 @@ three.on( "update", function(e) {
 	var mapPos = map.getWorldPosition();
 	var distanceToMap = cameraPos.distanceTo(mapPos);
 
-	// var infoText = "Geospatial Argon example:\n";
-
-	// infoText += "Pan x: " + pan.x + ", ";
-	// infoText += "Pan y: " + pan.y + ", ";
-	// infoText += "Pan z: " + pan.z + ", ";
 	elem.innerText = infoText;
     if (lastInfoText !== infoText) { // prevent unecessary DOM invalidations
       elem.innerText = infoText;
@@ -490,7 +456,7 @@ function onClick(e) {
             }
         }
 
-    } 
+    }
 }
 
 var tenthandhome = "251 10th St NW, Atlanta, GA 30318";
@@ -500,18 +466,10 @@ var directionsService;
 // Google Map Direction Services
 function initMap() {
 	directionsService = new google.maps.DirectionsService;
-	// var directionsDisplay = new google.maps.DirectionsRenderer;
-	// var map = new google.maps.Map(document.getElementById('map'), {
-	//   zoom: 7,
-	//   center: {lat: 41.85, lng: -87.65}
-	// });
-	// directionsDisplay.setMap(map);
 
 	var onChangeHandler = function() {
 	  calculateAndDisplayRoute(directionsService);
 	};
-	// document.getElementById('start').addEventListener('change', onChangeHandler);
-	// document.getElementById('end').addEventListener('change', onChangeHandler);
 
 	if (navigator.geolocation) {
 	    navigator.geolocation.getCurrentPosition(function(position) {
@@ -526,7 +484,7 @@ function initMap() {
 	      handleLocationError(true, pos);
 	    });
 	  } else {
-	    // Browser doesn't support Geolocation
+	    // browser doesn't support Geolocation
 	    console.log("Browser doesn't support geolocation");
 	  }
 }
@@ -538,7 +496,6 @@ function calculateAndDisplayRoute(directionsService) {
 	  travelMode: google.maps.TravelMode.WALKING
 	}, function(response, status) {
 	  if (status === google.maps.DirectionsStatus.OK) {
-	    // directionsDisplay.setDirections(response);
 	    console.log(response.routes[0].legs[0].steps);
 	  } else {
 	    console.log('Directions request failed due to ' + status);
